@@ -3,6 +3,13 @@ import raymath
 import utils
 import std/math
 import std/algorithm
+import perlin
+
+
+var
+  frequency = 0.2
+  octaves = 3
+  persistence = 0.5
 
 const MIN_GREEN = Color(r: 0, g: 60, b: 0, a: 255)
 const MAX_GREEN = Color(r: 0, g: 255, b: 0, a: 255)
@@ -17,6 +24,21 @@ type TileMap* = object
   colors: seq[Color]
 
   heights: seq[int]
+
+
+
+proc tile2index(map: TileMap, tile: Vector2i): int =
+  tile.y * (map.max_x + 1) + tile.x
+
+
+proc generateMap(map: var TileMap) =
+  map.heights = newSeq[int]((map.max_x + 1) * (map.max_y + 1))
+  for y in 0..map.max_x:
+    for x in 0..map.max_y:
+      var noise = newNoise(octaves, persistence)
+      let value = noise.simplex(x.float * frequency, y.float * frequency)
+      map.heights[map.tile2index(Vector2i(x: x, y: y))] = int(map.max_height.float * value)
+
 
 
 proc tile2pos*(map: TileMap, tile: Vector2i): Vector2 =
@@ -54,8 +76,9 @@ proc newTileMap*(vsize: float, max_x, max_y, max_height: int): TileMap =
         verts[i] = center + map.vertices[i]
       map.all_verts.add(verts)
 
-  map.heights = newSeq[int]((max_x + 1) * (max_y + 1))
-  map.heights.fill(1)
+  # map.heights = newSeq[int]((max_x + 1) * (max_y + 1))
+  # map.heights.fill(1)
+  generateMap(map)
 
   for i in 0..max_height:
     map.colors.add(colorLerp(MIN_GREEN, MAX_GREEN, i / max_height))
@@ -63,10 +86,6 @@ proc newTileMap*(vsize: float, max_x, max_y, max_height: int): TileMap =
   return map
 
 
-
-
-proc tile2index(map: TileMap, tile: Vector2i): int =
-  tile.y * (map.max_x + 1) + tile.x
 
 
 proc get_height*(map: TileMap, tile: Vector2i): int =
@@ -112,10 +131,6 @@ proc pos2tile*(map: TileMap, pos: Vector2): Vector2i =
 proc get_vertex(map: TileMap, tile: Vector2i, index: int): Vector2 =
   tile2pos(map, tile) + map.vertices[index]
 
-
-proc get_vertices(map: TileMap, tile: Vector2i): array[6, Vector2] =
-  for i in 0..5:
-    result[i] = get_vertex(map, tile, i)
 
 
 proc draw_tile(map: TileMap, tile: Vector2i) =

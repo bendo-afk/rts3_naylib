@@ -13,3 +13,4 @@ bin           = @["main"]
 requires "nim >= 2.2.6"
 
 requires "naylib >= 26.02.0"
+requires "perlin >= 0.9.0"
