@@ -1,10 +1,11 @@
-import math, random
+import math, random, sequtils
 import raylib
 import raymath
 import perlin
-import ../utils
+import ../../utils
 import hex_math
 import my_astar
+import astar
 
 
 var
@@ -16,7 +17,7 @@ const MIN_GREEN = Color(r: 0, g: 60, b: 0, a: 255)
 const MAX_GREEN = Color(r: 0, g: 255, b: 0, a: 255)
 
 
-type TileMap* = ref object
+type TileMap* = object
   vsize*: float
   max_x, max_y: int
   max_height: int
@@ -78,8 +79,6 @@ proc newTileMap*(vsize: float, max_x, max_y, max_height: int): TileMap =
   return map
 
 
-
-
 proc get_height*(map: TileMap, tile: Vector2i): int =
   map.heights[tile2index(map.max_x, tile)]
 
@@ -106,3 +105,11 @@ proc draw_map*(map: TileMap) =
 
 proc tile2pos*(map: TileMap, tile: Vector2i): Vector2 =
   map.centerPos[tile2index(map.maxX, tile)]
+
+
+proc pos2tile*(map: TileMap, pos: Vector2): Vector2i =
+  pos2tile(map.vsize, pos)
+
+
+proc calcPath*(map: TileMap, fromTile, toTile: Vector2i): seq[Vector2i] =
+  path[Grid, Vector2i, float](map.grid, fromTile, toTile).toSeq()

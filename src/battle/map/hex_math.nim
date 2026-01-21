@@ -1,6 +1,6 @@
 import math
 import raylib
-import ../utils
+import ../../utils
 
 const
   oddOffsets*: array[6, Vector2i] = [

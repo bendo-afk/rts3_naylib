@@ -28,7 +28,7 @@ type MatchRule* = object
 
   # map
   maxHeight* = 4
-  maxX, maxY* = 19
+  maxX*, maxY* = 19
   mapMode* = MapMode.Point
 
   # system
