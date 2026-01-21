@@ -1,8 +1,15 @@
+import sequtils
 import raylib
 import raymath
+import astar
 
-import tilemap
+import control
+import map/tilemap
 import camera
+
+import map/hex_math
+import map/my_astar
+import utils
 
 
 const
@@ -30,22 +37,23 @@ proc main =
   var camera = Camera2D(zoom: 0.1, target: Vector2(x: -100, y: -100), offset: Vector2(x: width.float32 / 2, y: height.float32 / 2))
   echo camera
 
+  var paths: seq[Vector2i]
+
   while not windowShouldClose():
     dragCamera(camera)
     zoomCamera(camera)
 
-    var offset: Vector2
-    if isKeyDown(Right):
-      offset = Vector2(x: 100, y: 0)
-    if isKeyDown(Left):
-      offset = Vector2(x: -100, y: 0)
-    if isKeyDown(Down):
-      offset = Vector2(x: 0, y: 100)
-    if isKeyDown(Up):
-      offset = Vector2(x: 0, y: -100) 
-      
+    circlePos = tile2pos(map.vsize, Vector2i(x: 0, y: 0))
 
-    circlePos = circlePos +  offset * getFrameTime() * 10
+
+    let rightClickPos = onRightClicked()
+    if rightClickPos[0]:
+      let worldPos = rightClickPos[1].getScreenToWorld2D(camera)
+      let
+        start = pos2tile(map.vsize, circlePos)
+        goal = pos2tile(map.vsize, worldPos)
+      echo start, goal
+      paths = path[Grid, Vector2i, float](map.grid, start, goal).toSeq()
 
 
     beginDrawing()
@@ -53,7 +61,10 @@ proc main =
 
     mode2D(camera):
       map.draw_map()
-      drawCircle(circlePos, 100, RayWhite)
+      drawCircle(circlePos, 10, RayWhite)
+
+      let paths_vec2 = paths.mapIt(map.tile2pos(it))
+      drawLineStrip(paths_vec2, Black)
 
     drawFPS(1, 1)
     endDrawing()
