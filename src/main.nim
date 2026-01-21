@@ -19,17 +19,11 @@ const
 
 var circlePos = Vector2(x: 100, y: 100)
 
-var
-  vsize = 100
-  max_x, max_y = 19
-  max_height = 4
+
 
 
 proc main =
   initWindow(screenWidth, screenHeight, "raylib example - binary search tree")
-
-
-  var map = newTileMap(vsize.float, max_x, max_y, max_height)
 
   let
     width = getScreenWidth()
