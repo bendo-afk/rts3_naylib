@@ -55,7 +55,7 @@ proc main =
       map.draw_map()
       drawCircle(circlePos, 100, RayWhite)
 
-    drawFPS(100, 100)
+    drawFPS(1, 1)
     endDrawing()
 
 

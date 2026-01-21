@@ -1,8 +1,7 @@
 import raylib
 import raymath
 import utils
-import std/math
-import std/algorithm
+import std/math, random
 import perlin
 
 
@@ -32,6 +31,8 @@ proc tile2index(map: TileMap, tile: Vector2i): int =
 
 
 proc generateMap(map: var TileMap) =
+  randomize()
+
   map.heights = newSeq[int]((map.max_x + 1) * (map.max_y + 1))
   for y in 0..map.max_x:
     for x in 0..map.max_y:

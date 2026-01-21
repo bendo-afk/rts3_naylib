@@ -1,5 +1,6 @@
 import raylib
 
+
 type Vector2i* = object
   x*, y*: int
 
