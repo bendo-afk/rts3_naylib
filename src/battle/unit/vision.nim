@@ -1,10 +1,10 @@
-type VisibleState = enum
-  vsNot, vsHalf, vsVisible
+type VisibleState* = enum
+  visNot, visHalf, visVisible
 
 type VisionComp* = object
   height: float
-  visibleState: VisibleState
+  visibleState*: VisibleState
 
 
 proc newVisionComp*(height: float): VisionComp =
-  VisionComp(height: height, visibleState: vsNot)
+  VisionComp(height: height, visibleState: visNot)

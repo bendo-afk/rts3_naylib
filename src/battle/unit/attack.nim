@@ -7,4 +7,5 @@ type AttackComp* = object
   turretAngle: float
 
 
-# proc newAttackComp(damage: int, )
+proc newAttackComp*(damage: int, traverseSpeed, angleMargin, maxReloadTime, leftReloadTime, turretAngle: float): AttackComp =
+  AttackComp(damage: damage, traverseSpeed: traverseSpeed, angleMargin: angleMargin, maxReloadTime: maxReloadTime, leftReloadTime: leftReloadTime, turretAngle: turretAngle)

@@ -4,8 +4,8 @@ type HeightActionComp* = object
   leftTimer: float
 
 
-proc newHeightActionComp*(maxTimer: float): HeightActionComp =
-  HeightActionComp(isChanging: false, maxTimer: maxTimer, leftTimer: 0)
+proc newHeightActionComp*(maxTimer, leftTimer: float): HeightActionComp =
+  HeightActionComp(isChanging: false, maxTimer: maxTimer, leftTimer: leftTimer)
 
 
 proc physics*(heightActionComp: var HeightActionComp, delta: float) =

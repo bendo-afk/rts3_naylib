@@ -38,6 +38,9 @@ proc handleInputs(battle: var Battle) =
     if isMouseButtonReleased(Left):
       db.dragging = false
       battle.world.selectByBox(db.rect)
+  
+  if isKeyPressed(D):
+    battle.world.deselect()
 
 
 

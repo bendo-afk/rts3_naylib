@@ -39,7 +39,7 @@ type MatchRule* = object
   sMargin* = 0
 
   heightCd* = 10
-  heightActionTime* = 1
+  heightActionTimer* = 1
 
   scoreInterval* = 9
   scoreKaisuu* = 3

@@ -1,14 +1,25 @@
 import raylib
-import height_action, hp, move, vision
+import height_action, hp, move, vision, attack
+export height_action, hp, move, vision, attack
 
 
 type Unit* = object
+  attack: AttackComp
   heightAction: HeightActionComp
   hp: HpComp
   move*: MoveComp
-  vision: VisionComp
+  vision*: VisionComp
   isSelected*: bool
 
 
-proc newUnit*(maxTimer: float, maxHp: int, speed, height: float, pos: Vector2): Unit =
-  Unit(heightAction: newHeightActionComp(maxTimer), hp: newHpComp(maxHp), move: newMoveComp(speed, pos), vision: newVisionComp(height))
+proc newUnit*(damage: int, traverseSpeed, angleMargin,
+        maxReloadTime, leftReloadTime, turretAngle: float,
+        maxTimer, leftTimer: float, maxHp: int, speed: int, height: float, pos: Vector2): Unit =
+  let
+    attack = newAttackComp(damage, traverseSpeed, angleMargin,
+        maxReloadTime, leftReloadTime, turretAngle)
+    heightAction = newHeightActionComp(maxTimer, leftTimer)
+    hp = newHpComp(maxHp)
+    move = newMoveComp(speed, pos)
+    vision = newVisionComp(height)
+  Unit(attack: attack, heightAction: heightAction, hp: hp, move: move, vision: vision)
