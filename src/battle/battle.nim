@@ -41,6 +41,9 @@ proc handleInputs(battle: var Battle) =
   
   if isKeyPressed(D):
     battle.world.deselect()
+  
+  if isMouseButtonPressed(Side):
+    battle.world.setTargetPos(getMousePosition().getScreenToWorld2D(battle.camera))
 
 
 
@@ -54,7 +57,7 @@ proc draw*(battle: var Battle) =
   zoomCamera(battle.camera)
 
   beginDrawing()
-  clearBackground(Brown)
+  clearBackground(Black)
   battle.world.draw(battle.camera)
   
   

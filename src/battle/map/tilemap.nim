@@ -47,6 +47,7 @@ proc generateMap(map: var TileMap) =
       var noise = newNoise(octaves, persistence)
       let value = noise.simplex(x.float * frequency, y.float * frequency)
       map.heights[tile2index(map.max_x, Vector2i(x: x, y: y))] = int(map.max_height.float * value)
+      # map.heights[tile2index(map.max_x, Vector2i(x: x, y: y))] = 1
 
 
 proc newTileMap*(vsize: float, max_x, max_y, max_height: int): TileMap =

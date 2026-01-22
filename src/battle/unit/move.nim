@@ -1,7 +1,7 @@
 import raylib, raymath
 
 
-type MoveComp* = ref object
+type MoveComp* = object
   speed: int
   pos*: Vector2
   movingWeight*: float

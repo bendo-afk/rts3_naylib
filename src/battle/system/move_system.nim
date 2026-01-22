@@ -1,15 +1,15 @@
-import ../unit/move
+import ../unit/unit
 import ../map/tilemap
 import ../rules/conversion
 
 type MoveSystem* = object
   diff2speed: Conversion
-  mComps: seq[MoveComp]
+  units: seq[Unit]
   map: TileMap
 
 
-proc newMoveSystem*(diff2speed: Conversion, mComps: seq[MoveComp], map: TileMap): MoveSystem =
-  MoveSystem(diff2speed: diff2speed, mComps: mComps, map: map)
+proc newMoveSystem*(diff2speed: Conversion, units: seq[Unit], map: TileMap): MoveSystem =
+  MoveSystem(diff2speed: diff2speed, units: units, map: map)
 
 
 proc setMultiplier*(moveSys: MoveSystem, mComp: var MoveComp) =
@@ -25,11 +25,11 @@ proc setMultiplier*(moveSys: MoveSystem, mComp: var MoveComp) =
   
 
 proc update*(moveSys: var MoveSystem, delta: float32) =
-  for m in moveSys.mComps.mitems:
-    m.movePos2Pos(delta)
-    if m.movingWeight == 1:
-      m.path.delete(0)
-      m.movingWeight = 0
-      setMultiplier(moveSys, m)
+  for u in moveSys.units.mitems:
+    u.move.movePos2Pos(delta)
+    if u.move.movingWeight == 1:
+      u.move.path.delete(0)
+      u.move.movingWeight = 0
+      setMultiplier(moveSys, u.move)
 
 

@@ -1,6 +1,6 @@
 type HpComp* = object
   maxHp: int
-  hp: int
+  hp*: int
 
 
 proc newHpComp*(maxHp: int): HpComp =

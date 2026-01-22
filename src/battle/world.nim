@@ -1,10 +1,10 @@
-import sequtils
-import raylib
+import algorithm, sequtils
+import raylib, raymath
 
 import rules/match_rule as mr
 import map/tilemap
 import unit/unit
-import system/[move_system, vision_system]
+import system/[attack_system, move_system, vision_system]
 import ../utils
 import ../control
 
@@ -32,6 +32,7 @@ type World* = object
   aUnits: seq[Unit]
   eUnits: seq[Unit]
 
+  attackSystem: AttackSystem
   moveSystem: MoveSystem
   visionSystem: VisionSystem
 
@@ -63,28 +64,34 @@ proc newWorld*(matchRule: MatchRule, vsize: float): World =
   
   var aUnits: seq[Unit]
   var aParams: seq[MinimalParams]
-  aParams = @[(1, 1, 10, 10, 0, map.tile2pos(Vector2i(x: 0, y: 0)))]
+  aParams.setLen(7)
+  var param: MinimalParams = (1, 1.float, 10, 1, 0.float, map.tile2pos(Vector2i(x: 0, y: 0)))
+  aParams.fill(param)
   setupTeam(matchRule, aUnits, aParams)
 
-  aParams[0].pos = map.tile2pos(Vector2i(x: matchRule.maxX, y: matchRule.maxY))
+  param.pos = map.tile2pos(Vector2i(x: matchRule.maxX, y: matchRule.maxY))
+  aParams.fill(param)
   var eUnits: seq[Unit]
   var eParams = aParams
   setupTeam(matchRule, eUnits, eParams)
 
 
-  let mComps = aUnits.mapIt(it.move)
-  let moveSys = newMoveSystem(matchRule.diff2speed, mComps, map)
+  let units = aUnits.concat(eUnits)
+  let attackSys = newAttackSystem(units)
+  let moveSys = newMoveSystem(matchRule.diff2speed, units, map)
   let visionSys = newVisionSystem(map, matchRule.lMargin, matchRule.sMargin, aUnits, eUnits)
 
   let dragBox = newDragBox()
 
-  return World(matchRule: matchRule, map: map, aUnits: aUnits, eUnits: eUnits, moveSystem: moveSys, visionSystem: visionSys, dragBox: dragBox)
+  return World(matchRule: matchRule, map: map, aUnits: aUnits, eUnits: eUnits, moveSystem: moveSys, visionSystem: visionSys, dragBox: dragBox, attackSystem: attackSys)
 
 
 
 proc update*(world: var World) =
   # deltaってどこで取得すべきなんだ？
-  world.moveSystem.update(getFrameTime())
+  let delta = getFrameTime()
+  world.attackSystem.update(delta)
+  world.moveSystem.update(delta)
   world.visionSystem.update()
   discard
 
@@ -94,6 +101,7 @@ proc draw*(world: World, camera: Camera2D) =
     world.map.draw_map()
     for a in world.aUnits:
       drawCircle(a.move.pos, unitSize.float32, RayWhite)
+      drawLine(a.move.pos, a.move.pos + Vector2(x: 1000 * cos(a.attack.turretAngle), y: 1000 * sin(a.attack.turretAngle)), 2, RayWhite)
     
     for e in world.eUnits:
       if e.vision.visibleState == visVisible:
@@ -105,11 +113,11 @@ proc draw*(world: World, camera: Camera2D) =
     
 
 
-proc setPath*(world: var World, pos: Vector2) =
+proc setPath*(world: World, pos: Vector2) =
   let toTile = world.map.pos2tile(pos)
   if not isExists(world.map, toTile):
     return
-  for a in world.aUnits.mitems:
+  for a in world.aUnits:
     if not a.isSelected:
       continue
     if a.move.movingWeight != 0:
@@ -136,3 +144,9 @@ proc selectByBox*(world: var World, rect: Rectangle) =
 proc deselect*(world: var World) =
   for a in world.aUnits.mitems:
     a.isSelected = false
+
+
+proc setTargetPos*(self: World, pos: Vector2) =
+  for a in self.aUnits:
+    if a.isSelected:
+      a.attack.targetPos = pos
