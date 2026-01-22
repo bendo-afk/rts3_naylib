@@ -5,7 +5,7 @@ export height_action, hp, move, vision, attack
 
 type Unit* = ref object
   attack*: AttackComp
-  heightAction: HeightActionComp
+  heightAction*: HeightActionComp
   hp*: HpComp
   move*: MoveComp
   vision*: VisionComp

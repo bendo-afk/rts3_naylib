@@ -26,6 +26,8 @@ proc setMultiplier*(moveSys: MoveSystem, mComp: var MoveComp) =
 
 proc update*(moveSys: var MoveSystem, delta: float32) =
   for u in moveSys.units.mitems:
+    if u.heightAction.isChanging:
+      continue
     u.move.movePos2Pos(delta)
     if u.move.movingWeight == 1:
       u.move.path.delete(0)

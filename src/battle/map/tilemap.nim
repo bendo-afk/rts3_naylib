@@ -20,7 +20,7 @@ const MAX_GREEN = Color(r: 0, g: 255, b: 0, a: 255)
 type TileMap* = ref object
   vsize*: float
   maxX, maxY: int
-  max_height: int
+  maxHeight: int
   vertices: array[6, Vector2]
   # all_verts: seq[array[6, Vector2]]
   colors: seq[Color]
@@ -73,9 +73,14 @@ proc getHeight*(map: TileMap, tile: Vector2i): int =
   map.heights[tile2index(map.max_x, tile)]
 
 
+proc canChangeHeight*(map: TileMap, tile: Vector2i, isRaise: bool): bool =
+  let h = map.getHeight(tile)
+  return not ((isRaise and h == map.maxHeight) or (not isRaise and h == 0))
 
-proc change_height*(map: var TileMap, tile: Vector2i, height: int) =
-  map.heights[tile2index(map.max_x, tile)] = height
+
+proc changeHeight*(map: var TileMap, tile: Vector2i, isRaise: bool) =
+  let diff = if isRaise: 1 else: -1
+  map.heights[tile2index(map.max_x, tile)] -= diff
 
 
 proc getVertex*(map: TileMap, tile: Vector2i, index: int): Vector2 =
@@ -107,3 +112,10 @@ proc calcPath*(map: TileMap, fromTile, toTile: Vector2i): seq[Vector2i] =
 
 proc isExists*(map: Tilemap, tile: Vector2i): bool =
   isExists(map.maxX, map.maxY, tile)
+
+
+proc isMovable*(map: TileMap, t1, t2: Vector2i): bool =
+  let heightDiff = map.getHeight(t2) - map.getHeight(t1)
+  if heightDiff > 1:
+    return false
+  return true
