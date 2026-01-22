@@ -25,6 +25,22 @@ proc handleInputs(battle: var Battle) =
     battle.world.setPath(worldPos)
 
 
+  template db: DragBox = battle.world.dragBox
+  if isMouseButtonPressed(Left):
+    db.dragging = true
+    db.dragStart = getMousePosition().getScreenToWorld2D(battle.camera)
+  if db.dragging:
+    db.dragEnd = getMousePosition().getScreenToWorld2D(battle.camera)
+    db.rect.x = min(db.dragStart.x, db.dragEnd.x)
+    db.rect.y = min(db.dragStart.y, db.dragEnd.y)
+    db.rect.width = abs(db.dragStart.x - db.dragEnd.x)
+    db.rect.height = abs(db.dragStart.y - db.dragEnd.y)
+    if isMouseButtonReleased(Left):
+      db.dragging = false
+      battle.world.selectByBox(db.rect)
+
+
+
 proc update*(battle: var Battle) =
   handleInputs(battle)
   battle.world.update()

@@ -6,9 +6,15 @@ import map/tilemap
 import unit/unit
 import system/move_system
 import ../utils
+import ../control
+
+
+var boxColor = Color(r: 0, g: 178, b: 255, a: 76)
+var lineColor = Color(r: 0, g: 127, b: 255, a: 153)
 
 
 var unitSize = 10
+
 
 type World* = object
   matchRule: MatchRule
@@ -19,6 +25,8 @@ type World* = object
 
   moveSystem: MoveSystem
 
+  dragBox*: DragBox
+
 
 proc newWorld*(matchRule: MatchRule, vsize: float): World =
   let map = newTileMap(vsize, matchRule.maxX, matchRule.maxY, matchRule.maxHeight)
@@ -26,7 +34,9 @@ proc newWorld*(matchRule: MatchRule, vsize: float): World =
   # Initialize move system with units' MoveComp so map is set inside MoveSystem
   let mComps = aUnits.mapIt(it.move)
   let moveSys = newMoveSystem(matchRule.diff2speed, mComps, map)
-  return World(matchRule: matchRule, map: map, aUnits: aUnits, moveSystem: moveSys)
+
+  let dragBox = newDragBox()
+  return World(matchRule: matchRule, map: map, aUnits: aUnits, moveSystem: moveSys, dragBox: dragBox)
 
 
 
@@ -41,6 +51,12 @@ proc draw*(world: World, camera: Camera2D) =
     world.map.draw_map()
     for a in world.aUnits:
       drawCircle(a.move.pos, unitSize.float32, RayWhite)
+    
+    if world.dragBox.dragging:
+      drawRectangle(world.dragBox.rect, boxColor)
+      drawRectangleLines(world.dragBox.rect, 2 / camera.zoom,lineColor)
+    
+
 
 proc setPath*(world: var World, pos: Vector2) =
   let toTile = world.map.pos2tile(pos)
@@ -60,3 +76,11 @@ proc setPath*(world: var World, pos: Vector2) =
         addedPath2 = addedPath2i.mapIt(world.map.tile2pos(it))
       a.move.path = addedPath2
       world.moveSystem.setMultiplier(a.move)
+
+
+proc selectByBox*(world: var World, rect: Rectangle) =
+  for a in world.aUnits.mitems:
+    if a.move.pos.x >= rect.x and a.move.pos.x <= rect.x + rect.width and
+        a.move.pos.y >= rect.y and a.move.pos.y <= rect.y + rect.height:
+          echo rect
+          a.isSelected = true
