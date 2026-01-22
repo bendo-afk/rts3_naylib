@@ -13,9 +13,6 @@ type Scene {.pure.} = enum
   Battle
 
 
-var circlePos: Vector2
-
-
 
 
 proc main =
@@ -43,5 +40,3 @@ proc main =
 
 main()
 
-# todo
-# マップ外をクリックしたときにクラッシュする

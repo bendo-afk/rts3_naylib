@@ -1,10 +1,10 @@
 import sequtils
 import raylib
 
-import rules/[match_rule as mr, conversion]
+import rules/match_rule as mr
 import map/tilemap
 import unit/unit
-import system/move_system
+import system/[move_system, vision_system]
 import ../utils
 import ../control
 
@@ -33,6 +33,7 @@ type World* = object
   eUnits: seq[Unit]
 
   moveSystem: MoveSystem
+  visionSystem: VisionSystem
 
   dragBox*: DragBox
 
@@ -62,7 +63,7 @@ proc newWorld*(matchRule: MatchRule, vsize: float): World =
   
   var aUnits: seq[Unit]
   var aParams: seq[MinimalParams]
-  aParams = @[(1, 1, 10, 1, 0, map.tile2pos(Vector2i(x: 0, y: 0)))]
+  aParams = @[(1, 1, 10, 10, 0, map.tile2pos(Vector2i(x: 0, y: 0)))]
   setupTeam(matchRule, aUnits, aParams)
 
   aParams[0].pos = map.tile2pos(Vector2i(x: matchRule.maxX, y: matchRule.maxY))
@@ -73,15 +74,18 @@ proc newWorld*(matchRule: MatchRule, vsize: float): World =
 
   let mComps = aUnits.mapIt(it.move)
   let moveSys = newMoveSystem(matchRule.diff2speed, mComps, map)
+  let visionSys = newVisionSystem(map, matchRule.lMargin, matchRule.sMargin, aUnits, eUnits)
 
   let dragBox = newDragBox()
-  return World(matchRule: matchRule, map: map, aUnits: aUnits, eUnits: eUnits, moveSystem: moveSys, dragBox: dragBox)
+
+  return World(matchRule: matchRule, map: map, aUnits: aUnits, eUnits: eUnits, moveSystem: moveSys, visionSystem: visionSys, dragBox: dragBox)
 
 
 
 proc update*(world: var World) =
   # deltaってどこで取得すべきなんだ？
   world.moveSystem.update(getFrameTime())
+  world.visionSystem.update()
   discard
 
 
@@ -92,8 +96,8 @@ proc draw*(world: World, camera: Camera2D) =
       drawCircle(a.move.pos, unitSize.float32, RayWhite)
     
     for e in world.eUnits:
-      # if e.vision.visibleState == visVisible:
-      drawCircle(e.move.pos, unitSize.float32, Red)
+      if e.vision.visibleState == visVisible:
+        drawCircle(e.move.pos, unitSize.float32, Red)
     
     if world.dragBox.dragging:
       drawRectangle(world.dragBox.rect, boxColor)

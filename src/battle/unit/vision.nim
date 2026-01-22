@@ -2,7 +2,7 @@ type VisibleState* = enum
   visNot, visHalf, visVisible
 
 type VisionComp* = object
-  height: float
+  height*: float
   visibleState*: VisibleState
 
 

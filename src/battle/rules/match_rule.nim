@@ -1,4 +1,5 @@
 import conversion
+export conversion
 
 
 type MapMode {.pure.} = enum

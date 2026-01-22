@@ -2,6 +2,8 @@ import math
 import raylib
 import ../../utils
 
+export math, raylib, utils
+
 const
   oddOffsets*: array[6, Vector2i] = [
     Vector2i(x: 1, y: -1),
@@ -19,6 +21,7 @@ const
     Vector2i(x: -1, y: 0),
     Vector2i(x: -1, y: -1)
   ]
+
 
 proc getAdjacentTile*(tile: Vector2i, index: int): Vector2i =
   if (tile.y mod 2) == 1:
@@ -70,7 +73,7 @@ proc tile2index*(max_x: int, tile: Vector2i): int =
   tile.y * (max_x + 1) + tile.x
 
 
-proc oddr_to_axial(tile: Vector2i): Vector2i =
+proc oddr2axial(tile: Vector2i): Vector2i =
   let
     parity = tile.y and 1
     q = tile.x - (tile.y - parity) div 2
@@ -84,8 +87,8 @@ proc axial_dist(a, b: Vector2i): int =
 
 proc calc_dist*(a, b: Vector2i): int  =
   let
-    ac = oddr_to_axial(a)
-    bc = oddr_to_axial(b)
+    ac = oddr2axial(a)
+    bc = oddr2axial(b)
   return axial_dist(ac, bc)
 
 
@@ -93,3 +96,17 @@ proc isExists*(maxX, maxY: int, tile: Vector2i): bool =
   return
     tile.y >= 0 and tile.y <= maxY and
     tile.x >= 0 and tile.x <= maxX
+
+
+proc getHexVertices*(vsize: float): array[6, Vector2] =
+  let
+    hsize = sqrt(3.0) / 2 * vsize
+    half_vsize = vsize / 2
+  result = [
+    Vector2(x: 0, y: -vsize),
+    Vector2(x: hsize, y: -half_vsize),
+    Vector2(x: hsize, y: half_vsize),
+    Vector2(x: 0, y: vsize),
+    Vector2(x: -hsize, y: half_vsize),
+    Vector2(x: -hsize, y: -half_vsize)
+  ]

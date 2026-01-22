@@ -1,11 +1,11 @@
-import math, random, sequtils
-import raylib
+import random, sequtils
 import raymath
 import perlin
-import ../../utils
 import hex_math
 import my_astar
 import astar
+
+export hex_math
 
 
 var
@@ -17,7 +17,7 @@ const MIN_GREEN = Color(r: 0, g: 60, b: 0, a: 255)
 const MAX_GREEN = Color(r: 0, g: 255, b: 0, a: 255)
 
 
-type TileMap* = object
+type TileMap* = ref object
   vsize*: float
   maxX, maxY: int
   max_height: int
@@ -55,18 +55,7 @@ proc newTileMap*(vsize: float, max_x, max_y, max_height: int): TileMap =
     max_x: max_x, max_y: max_y, max_height: max_height
   )
 
-  let
-    hsize = sqrt(3.0) / 2 * vsize
-    half_vsize = vsize / 2
-  map.vertices = [
-    Vector2(x: 0, y: -vsize),
-    Vector2(x: hsize, y: -half_vsize),
-    Vector2(x: hsize, y: half_vsize),
-    Vector2(x: 0, y: vsize),
-    Vector2(x: -hsize, y: half_vsize),
-    Vector2(x: -hsize, y: -half_vsize)
-  ]
-
+  map.vertices = getHexVertices(vsize)
   generateMap(map)
 
   for i in 0..max_height:
@@ -79,7 +68,7 @@ proc newTileMap*(vsize: float, max_x, max_y, max_height: int): TileMap =
   return map
 
 
-proc get_height*(map: TileMap, tile: Vector2i): int =
+proc getHeight*(map: TileMap, tile: Vector2i): int =
   map.heights[tile2index(map.max_x, tile)]
 
 
@@ -88,7 +77,7 @@ proc change_height*(map: var TileMap, tile: Vector2i, height: int) =
   map.heights[tile2index(map.max_x, tile)] = height
 
 
-proc get_vertex(map: TileMap, tile: Vector2i, index: int): Vector2 =
+proc getVertex*(map: TileMap, tile: Vector2i, index: int): Vector2 =
   tile2pos(map.vsize, tile) + map.vertices[index]
 
 

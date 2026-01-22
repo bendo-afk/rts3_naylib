@@ -3,13 +3,14 @@ import height_action, hp, move, vision, attack
 export height_action, hp, move, vision, attack
 
 
-type Unit* = object
+type Unit* = ref object
   attack: AttackComp
   heightAction: HeightActionComp
   hp: HpComp
   move*: MoveComp
   vision*: VisionComp
   isSelected*: bool
+  visibleEnemies*: seq[Unit]
 
 
 proc newUnit*(damage: int, traverseSpeed, angleMargin,

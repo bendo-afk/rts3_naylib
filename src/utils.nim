@@ -1,5 +1,6 @@
+import math
 import hashes
-import raylib
+import raylib, raymath
 
 
 type Vector2i* = object
@@ -17,3 +18,7 @@ proc `==`*(a, b: Vector2i): bool =
     return true
   else:
     return false
+
+
+proc turn*(v0, v1, v2: Vector2): int =
+  crossProduct(v1 - v0, v2 - v0).sgn()
