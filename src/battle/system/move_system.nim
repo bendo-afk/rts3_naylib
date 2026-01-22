@@ -30,7 +30,6 @@ proc update*(moveSys: var MoveSystem, delta: float32) =
     if m.movingWeight == 1:
       m.path.delete(0)
       m.movingWeight = 0
-      if m.path.len >= 2:
-        setMultiplier(moveSys, m)
+      setMultiplier(moveSys, m)
 
 

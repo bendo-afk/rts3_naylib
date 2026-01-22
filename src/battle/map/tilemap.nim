@@ -19,7 +19,7 @@ const MAX_GREEN = Color(r: 0, g: 255, b: 0, a: 255)
 
 type TileMap* = object
   vsize*: float
-  max_x, max_y: int
+  maxX, maxY: int
   max_height: int
   vertices: array[6, Vector2]
   # all_verts: seq[array[6, Vector2]]
@@ -113,3 +113,7 @@ proc pos2tile*(map: TileMap, pos: Vector2): Vector2i =
 
 proc calcPath*(map: TileMap, fromTile, toTile: Vector2i): seq[Vector2i] =
   path[Grid, Vector2i, float](map.grid, fromTile, toTile).toSeq()
+
+
+proc isExists*(map: Tilemap, tile: Vector2i): bool =
+  isExists(map.maxX, map.maxY, tile)

@@ -87,3 +87,9 @@ proc calc_dist*(a, b: Vector2i): int  =
     ac = oddr_to_axial(a)
     bc = oddr_to_axial(b)
   return axial_dist(ac, bc)
+
+
+proc isExists*(maxX, maxY: int, tile: Vector2i): bool =
+  return
+    tile.y >= 0 and tile.y <= maxY and
+    tile.x >= 0 and tile.x <= maxX

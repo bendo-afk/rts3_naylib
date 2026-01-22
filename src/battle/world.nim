@@ -43,9 +43,10 @@ proc draw*(world: World, camera: Camera2D) =
       drawCircle(a.move.pos, unitSize.float32, RayWhite)
 
 proc setPath*(world: var World, pos: Vector2) =
+  let toTile = world.map.pos2tile(pos)
+  if not isExists(world.map, toTile):
+    return
   for a in world.aUnits.mitems:
-    let
-      toTile = world.map.pos2tile(pos)
     if a.move.movingWeight != 0:
       let
         addedPath2i = world.map.calcPath(world.map.pos2tile(a.move.path[1]), toTile)

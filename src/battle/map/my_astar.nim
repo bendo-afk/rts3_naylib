@@ -15,11 +15,6 @@ proc newGrid*(heights: seq[int], maxX, maxY, maxHeight: int): Grid =
   Grid(heights: heights, maxX: maxX, maxY: maxY, maxHeight: maxHeight)
 
 
-proc isExists(grid: Grid, tile: Vector2i): bool =
-  return
-    tile.y >= 0 and tile.y <= grid.maxY and
-    tile.x >= 0 and tile.x <= grid.maxX
-
 proc isMovable(grid: Grid, t1, t2: Vector2i): bool =
   let heightDiff = grid.heights[tile2index(grid.maxX, t2)] - grid.heights[tile2index(grid.maxX, t1)]
   if heightDiff > 1:
@@ -30,7 +25,7 @@ proc isMovable(grid: Grid, t1, t2: Vector2i): bool =
 iterator neighbors*(grid: Grid, tile: Vector2i): Vector2i =
   for i in 0..5:
     let nextTile = getAdjacentTile(tile, i)
-    if isExists(grid, nextTile) and isMovable(grid, tile, nextTile):
+    if isExists(grid.maxX, grid.maxY, nextTile) and isMovable(grid, tile, nextTile):
       yield nextTile
 
 
