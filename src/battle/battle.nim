@@ -44,6 +44,9 @@ proc handleInputs(battle: var Battle) =
   
   if isMouseButtonPressed(Side):
     battle.world.setTargetPos(getMousePosition().getScreenToWorld2D(battle.camera))
+  
+  if isKeyPressed(R):
+    battle.world.changeHeight(getMousePosition().getScreenToWorld2D(battle.camera), true)
 
 
 

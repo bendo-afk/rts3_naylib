@@ -16,9 +16,9 @@ type HeightSystem* = object
 
 
 proc newHeightSystem*(map: TileMap, maxCd: float): HeightSystem =
-  var initialActionState = ActionState(leftCd: maxCd)
-  var states: array[2, ActionState] = [initialActionState, initialActionState.deepCopy()]
-  HeightSystem(map: map, maxCd: maxCd, states: states)
+  result = HeightSystem(map: map, maxCd: maxCd)
+  for i in 0 ..< result.states.len:
+    result.states[i] = ActionState(leftCd: maxCd)
 
 
 # チーム判定用のヘルパー
@@ -40,9 +40,9 @@ proc tryStart*(self: var HeightSystem, unit: Unit, isAlly: bool, tile: Vector2i,
   state.isRaise = isRaise  
 
 
-proc stopAction(lockedUnit: var Unit) =
-  lockedUnit.heightAction.reset()
-  lockedUnit = nil
+proc stopAction(state: ActionState) =
+  state.lockedUnit.heightAction.reset()
+  state.lockedUnit = nil
 
 
 proc update*(self: var HeightSystem, delta: float) =
@@ -57,18 +57,18 @@ proc update*(self: var HeightSystem, delta: float) =
 
       if not self.map.canChangeHeight(state.targetTile, state.isRaise) or
           not self.map.isMovable(self.map.pos2tile(u.move.pos), state.targetTile):
+        echo 1
         if state.targetTile != changedTile:
-          stopAction(u)
+          stopAction(state)
           continue
         # 同時に同じタイルを同方向に変えたとき、あとのチームがタイルをかえれず、スコアを得られない。
     
       u.heightAction.update(delta)
 
       if u.heightAction.leftTimer <= 0:
-        stopAction(u)
+        stopAction(state)
         state.leftCd = self.maxCd
         if state.targetTile != changedTile or isRaise != state.isRaise:
           self.map.changeHeight(state.targetTile, state.isRaise)
           changedTile = state.targetTile
           isRaise = state.isRaise
-        getScore(state)

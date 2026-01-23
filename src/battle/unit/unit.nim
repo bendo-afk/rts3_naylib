@@ -15,11 +15,11 @@ type Unit* = ref object
 
 proc newUnit*(damage: int, traverseSpeed, angleMargin,
         maxReloadTime, leftReloadTime, turretAngle: float,
-        maxTimer, leftTimer: float, maxHp: int, speed: int, height: float, pos: Vector2): Unit =
+        maxTimer: float, maxHp: int, speed: int, height: float, pos: Vector2): Unit =
   let
     attack = newAttackComp(damage, traverseSpeed, angleMargin,
         maxReloadTime, leftReloadTime, turretAngle)
-    heightAction = newHeightActionComp(maxTimer, leftTimer)
+    heightAction = newHeightActionComp(maxTimer)
     hp = newHpComp(maxHp)
     move = newMoveComp(speed, pos)
     vision = newVisionComp(height)

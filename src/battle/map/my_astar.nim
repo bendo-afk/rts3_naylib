@@ -7,11 +7,11 @@ import ../rules/conversion
 var diff2speed: Conversion = newConversion(1, -0.3, 1)
 
 type Grid* = object
-  heights: seq[int]
+  heights: ref seq[int]
   maxX, maxY, maxHeight: int
 
 
-proc newGrid*(heights: seq[int], maxX, maxY, maxHeight: int): Grid =
+proc newGrid*(heights: ref seq[int], maxX, maxY, maxHeight: int): Grid =
   Grid(heights: heights, maxX: maxX, maxY: maxY, maxHeight: maxHeight)
 
 

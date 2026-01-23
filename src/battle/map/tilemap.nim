@@ -25,7 +25,7 @@ type TileMap* = ref object
   # all_verts: seq[array[6, Vector2]]
   colors: seq[Color]
 
-  heights: seq[int]
+  heights: ref seq[int]
   centerPos: seq[Vector2]
 
   grid*: Grid
@@ -41,7 +41,8 @@ proc getAllCenterPos(vsize: float, max_x, max_y: int): seq[Vector2] =
 proc generateMap(map: var TileMap) =
   randomize()
 
-  map.heights = newSeq[int]((map.max_x + 1) * (map.max_y + 1))
+  map.heights = new seq[int]
+  map.heights[].setLen((map.max_x + 1) * (map.max_y + 1))
   for y in 0..map.max_y:
     for x in 0..map.max_x:
       var noise = newNoise(octaves, persistence)
@@ -80,7 +81,7 @@ proc canChangeHeight*(map: TileMap, tile: Vector2i, isRaise: bool): bool =
 
 proc changeHeight*(map: var TileMap, tile: Vector2i, isRaise: bool) =
   let diff = if isRaise: 1 else: -1
-  map.heights[tile2index(map.max_x, tile)] -= diff
+  map.heights[tile2index(map.max_x, tile)] += diff
 
 
 proc getVertex*(map: TileMap, tile: Vector2i, index: int): Vector2 =
@@ -115,6 +116,7 @@ proc isExists*(map: Tilemap, tile: Vector2i): bool =
 
 
 proc isMovable*(map: TileMap, t1, t2: Vector2i): bool =
+  if calc_dist(t1, t2) > 1: return false
   let heightDiff = map.getHeight(t2) - map.getHeight(t1)
   if heightDiff > 1:
     return false

@@ -4,7 +4,7 @@ import raylib, raymath
 import rules/match_rule as mr
 import map/tilemap
 import unit/unit
-import system/[attack_system, move_system, vision_system]
+import system/[attack_system, height_system, move_system, vision_system]
 import ../utils
 import ../control
 
@@ -33,6 +33,7 @@ type World* = object
   eUnits: seq[Unit]
 
   attackSystem: AttackSystem
+  heightSystem: HeightSystem
   moveSystem: MoveSystem
   visionSystem: VisionSystem
 
@@ -48,10 +49,9 @@ proc newUnit(mr: MatchRule, params: MinimalParams): Unit =
     leftReloadTime = maxReloadTime
     turretAngle = 0.float
     maxTimer = mr.heightActionTimer.float
-    leftTimer = 0.float
   newUnit(params.damage, traverseSpeed, angleMargin,
         maxReloadTime, leftReloadTime, turretAngle,
-        maxTimer, leftTimer, params.maxHp, params.speed, params.height, params.pos)
+        maxTimer, params.maxHp, params.speed, params.height, params.pos)
 
 
 proc setupTeam(mr: MatchRule, teamSeq: var seq[Unit], unitsParams: seq[MinimalParams]) =
@@ -80,10 +80,11 @@ proc newWorld*(matchRule: MatchRule, vsize: float): World =
   let attackSys = newAttackSystem(units)
   let moveSys = newMoveSystem(matchRule.diff2speed, units, map)
   let visionSys = newVisionSystem(map, matchRule.lMargin, matchRule.sMargin, aUnits, eUnits)
+  let heightSys = newHeightSystem(map, matchRule.heightCd)
 
   let dragBox = newDragBox()
 
-  return World(matchRule: matchRule, map: map, aUnits: aUnits, eUnits: eUnits, moveSystem: moveSys, visionSystem: visionSys, dragBox: dragBox, attackSystem: attackSys)
+  return World(matchRule: matchRule, map: map, aUnits: aUnits, eUnits: eUnits, heightSystem: heightSys, moveSystem: moveSys, visionSystem: visionSys, dragBox: dragBox, attackSystem: attackSys)
 
 
 
@@ -91,6 +92,7 @@ proc update*(world: var World) =
   # deltaってどこで取得すべきなんだ？
   let delta = getFrameTime()
   world.attackSystem.update(delta)
+  world.heightSystem.update(delta)
   world.moveSystem.update(delta)
   world.visionSystem.update()
   discard
@@ -150,3 +152,11 @@ proc setTargetPos*(self: World, pos: Vector2) =
   for a in self.aUnits:
     if a.isSelected:
       a.attack.targetPos = pos
+
+
+proc changeHeight*(self: var World, pos: Vector2, isRaise: bool) =
+  let tile = self.map.pos2tile(pos)
+  for a in self.aUnits:
+    if not a.isSelected or a.move.movingWeight != 0:
+      continue
+    self.heightSystem.tryStart(a, true, tile, isRaise)
