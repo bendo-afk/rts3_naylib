@@ -9,10 +9,15 @@ type
     targetTile: Vector2i
     isRaise: bool
 
+  IsChanged = object
+    isChanged*: bool
+    tile*: Vector2i
+
 type HeightSystem* = object
   map: TileMap
   maxCd: float
   states: array[2, ActionState]
+  areChanged*: array[2, IsChanged]
 
 
 proc newHeightSystem*(map: TileMap, maxCd: float): HeightSystem =
@@ -48,7 +53,9 @@ proc stopAction(state: ActionState) =
 proc update*(self: var HeightSystem, delta: float) =
   var changedTile = Vector2i(x: int.low, y: int.low)
   var isRaise = false
-  for state in self.states:
+  for i, state in self.states:
+    self.areChanged[i].isChanged = false
+
     if state.leftCd > 0:
       state.leftCd -= delta
     
@@ -72,3 +79,6 @@ proc update*(self: var HeightSystem, delta: float) =
           self.map.changeHeight(state.targetTile, state.isRaise)
           changedTile = state.targetTile
           isRaise = state.isRaise
+                
+        self.areChanged[i].isChanged = true
+        self.areChanged[i].tile = state.targetTile

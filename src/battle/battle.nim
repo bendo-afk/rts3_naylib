@@ -51,8 +51,10 @@ proc handleInputs(battle: var Battle) =
 
 
 proc update*(battle: var Battle) =
+  let delta = getFrameTime()
+  battle.world.update(delta)
+  
   handleInputs(battle)
-  battle.world.update()
 
 
 proc draw*(battle: var Battle) =

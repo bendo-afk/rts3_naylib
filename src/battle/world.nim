@@ -4,7 +4,7 @@ import raylib, raymath
 import rules/match_rule as mr
 import map/tilemap
 import unit/unit
-import system/[attack_system, height_system, move_system, vision_system]
+import system/[attack_system, height_system, move_system, vision_system, score_system]
 import ../utils
 import ../control
 
@@ -35,6 +35,7 @@ type World* = object
   attackSystem: AttackSystem
   heightSystem: HeightSystem
   moveSystem: MoveSystem
+  scoreSystem: ScoreSystem
   visionSystem: VisionSystem
 
   dragBox*: DragBox
@@ -81,20 +82,27 @@ proc newWorld*(matchRule: MatchRule, vsize: float): World =
   let moveSys = newMoveSystem(matchRule.diff2speed, units, map)
   let visionSys = newVisionSystem(map, matchRule.lMargin, matchRule.sMargin, aUnits, eUnits)
   let heightSys = newHeightSystem(map, matchRule.heightCd)
+  let scoreSys = newScoreSystem(matchRule.scoreInterval, matchRule.scoreKaisuu, matchRule.scoreBase, matchRule.dist2penalty)
 
   let dragBox = newDragBox()
 
-  return World(matchRule: matchRule, map: map, aUnits: aUnits, eUnits: eUnits, heightSystem: heightSys, moveSystem: moveSys, visionSystem: visionSys, dragBox: dragBox, attackSystem: attackSys)
+  return World(matchRule: matchRule, map: map, aUnits: aUnits, eUnits: eUnits, heightSystem: heightSys, moveSystem: moveSys, visionSystem: visionSys, dragBox: dragBox, attackSystem: attackSys, scoreSystem: scoreSys)
 
 
 
-proc update*(world: var World) =
+proc update*(world: var World, delta: float) =
   # deltaってどこで取得すべきなんだ？
-  let delta = getFrameTime()
   world.attackSystem.update(delta)
   world.heightSystem.update(delta)
   world.moveSystem.update(delta)
   world.visionSystem.update()
+  world.scoreSystem.update(delta)
+
+  let areTilesChanged = world.heightSystem.areChanged
+  for i, itc in areTilesChanged:
+    if itc.isChanged:
+      world.scoreSystem.onTileChanged(itc.tile, i == 0, getTime())
+
   discard
 
 

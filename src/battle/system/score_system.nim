@@ -7,7 +7,7 @@ type EffectiveTile = object
   tile: Vector2i
   leftTime: float
   leftCount: int
-  createdFrame: int
+  createdFrame: float
 
 
 type ScoreSystem* = object
@@ -17,6 +17,10 @@ type ScoreSystem* = object
   dist2pena: Conversion
   allyTiles, enemyTiles: seq[EffectiveTile]
   aScore*, eScore*: float
+
+
+proc newScoreSystem*(scoreInterval: float, scoreKaisuu: int, basePoint: float, dist2pena: Conversion): ScoreSystem =
+  ScoreSystem(scoreInterval: scoreInterval, scoreKaisuu: scoreKaisuu, basePoint: basePoint, dist2pena: dist2pena, aScore: 0, eScore: 0)
 
 
 proc calcScore(self: ScoreSystem, eTile: EffectiveTile, isAlly: bool): float =
@@ -32,7 +36,7 @@ proc calcScore(self: ScoreSystem, eTile: EffectiveTile, isAlly: bool): float =
   return max(self.basePoint - penalty, 0.0)
 
 
-proc onTileChanged*(self: var ScoreSystem, tile: Vector2i, isAlly: bool, currentFrame: int) =
+proc onTileChanged*(self: var ScoreSystem, tile: Vector2i, isAlly: bool, currentFrame: float) =
   let eTile = EffectiveTile(
       tile: tile,
       leftTime: self.scoreInterval,
@@ -48,25 +52,22 @@ proc onTileChanged*(self: var ScoreSystem, tile: Vector2i, isAlly: bool, current
   
 
 proc updateSide(self: var ScoreSystem, isAlly: bool, delta: float) =
-  var tiles = if isAlly: self.allyTiles else: self.enemyTiles
+  let tilesPtr = if isAlly: addr(self.allyTiles) else: addr(self.enemyTiles)
   
-  var i = tiles.len
-  while i > 0:
-    tiles[i].leftTime -= delta
-    
-    if tiles[i].leftTime <= 0:
-      let s = self.calcScore(tiles[i], isAlly)
-      if isAlly: self.aScore += s else: self.eScore += s
-      
-      tiles[i].leftCount -= 1
-      if tiles[i].leftCount <= 0:
-        tiles.delete(i)
-      else:
-        tiles[i].leftTime = self.scoreInterval
-    dec i
+  for t in tilesPtr[].mitems:
+    t.leftTime -= delta
 
+    if t.leftTime <= 0:
+      let s = self.calcScore(t, isAlly)
+      if isAlly: self.aScore += s else: self.eScore += s
+      t.leftTime = self.scoreInterval
+      dec t.leftCount
+  
+  tilesPtr[].keepItIf(it.leftCount > 0)
+ 
 
 # メインの更新処理
 proc update*(self: var ScoreSystem, delta: float) =
   self.updateSide(true, delta)
+  echo self.aScore
   self.updateSide(false, delta)
