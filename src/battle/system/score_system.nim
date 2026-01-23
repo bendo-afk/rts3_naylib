@@ -23,9 +23,8 @@ proc newScoreSystem*(scoreInterval: float, scoreKaisuu: int, basePoint: float, d
   ScoreSystem(scoreInterval: scoreInterval, scoreKaisuu: scoreKaisuu, basePoint: basePoint, dist2pena: dist2pena, aScore: 0, eScore: 0)
 
 
-proc calcScore(self: ScoreSystem, eTile: EffectiveTile, isAlly: bool): float =
+proc calcScore(self: ScoreSystem, eTile: EffectiveTile, effTiles: seq[EffectiveTile]): float =
   var penalty = 0.0
-  let effTiles = if isAlly: self.allyTiles else: self.enemyTiles
   for t in effTiles:
     if eTile == t: continue
     let dist = calcDist(eTile.tile, t.tile)
@@ -49,25 +48,20 @@ proc onTileChanged*(self: var ScoreSystem, tile: Vector2i, isAlly: bool, current
   else:
     self.allyTiles.keepItIf(not (it.tile == tile and it.createdFrame != currentFrame))
     self.enemyTiles.add(eTile)
-  
 
-proc updateSide(self: var ScoreSystem, isAlly: bool, delta: float) =
-  let tilesPtr = if isAlly: addr(self.allyTiles) else: addr(self.enemyTiles)
-  
-  for t in tilesPtr[].mitems:
+
+proc updateSide(self: ScoreSystem, tiles: var seq[EffectiveTile], score: var float, delta: float) =
+  for t in tiles.mitems:
     t.leftTime -= delta
 
     if t.leftTime <= 0:
-      let s = self.calcScore(t, isAlly)
-      if isAlly: self.aScore += s else: self.eScore += s
+      score += self.calcScore(t, tiles)
       t.leftTime = self.scoreInterval
       dec t.leftCount
-  
-  tilesPtr[].keepItIf(it.leftCount > 0)
- 
+
+  tiles.keepItIf(it.leftCount > 0)
 
 # メインの更新処理
 proc update*(self: var ScoreSystem, delta: float) =
-  self.updateSide(true, delta)
-  echo self.aScore
-  self.updateSide(false, delta)
+  self.updateSide(self.allyTiles, self.aScore, delta)
+  self.updateSide(self.enemyTiles, self.eScore, delta)
