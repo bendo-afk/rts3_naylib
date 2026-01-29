@@ -70,7 +70,7 @@ proc draw*(battle: var Battle) =
   zoomCamera(battle.camera)
 
   beginDrawing()
-  clearBackground(Black)
+  clearBackground(Brown)
   battle.world.draw(battle.camera)
   
   battle.worldUI.draw()

@@ -8,7 +8,8 @@ type
     barBg*: Color = DarkGray
     DiffBarBright*: float32 = 0.5
 
-    sideTopMargin*: float32 = 100
+    sideTopMargin*: float32 = 150
+    sideSideMargin*: float32 = 10
     sideFontSize*: float32 = 20
     sideBarX*: float32 = 100
 

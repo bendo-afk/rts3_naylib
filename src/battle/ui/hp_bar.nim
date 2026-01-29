@@ -68,7 +68,7 @@ when isMainModule:
   var
     value = 100.float32
     pos = Vector2(x: 10, y:100)
-    size = Vector2(x: 300, y: 90)
+    size = Vector2(x: -300, y: 90)
     min = 0.float32
     max = 100.float32
     bg = Gray
@@ -84,6 +84,9 @@ when isMainModule:
 
     beginDrawing()
     hpBar.drawHpBar()
+
+    drawRectangle(pos, Vector2(x: -300, y: -90), RayWhite)
+
     endDrawing()
 
     if isKeyPressed(Space):
