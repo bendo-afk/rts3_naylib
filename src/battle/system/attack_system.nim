@@ -36,4 +36,4 @@ proc update*(self: AttackSystem, delta: float) =
     let relTargetPos = u.attack.targetPos - u.move.pos
     u.attack.rotateTurret(relTargetPos, delta)
 
-    u.attack.leftReloadTime = max(u.attack.leftReloadTime, 0)
+    u.attack.leftReloadTime = max(u.attack.leftReloadTime - delta, 0)

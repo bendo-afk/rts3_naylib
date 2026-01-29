@@ -3,17 +3,22 @@ import world
 import ../camera
 import ../control
 import rules/match_rule
+import ui/world_ui
 
 var vsize = 100
 
 type Battle* = object
   world: World
+  worldUI: WorldUI
   camera: Camera2D
 
 
 proc newBattle*(width, height: float32): Battle =
   let camera = Camera2D(zoom: 1, target: Vector2(x: -100, y: -100), offset: Vector2(x: width / 2, y: height / 2))
-  Battle(world: newWorld(MatchRule(), vsize.float), camera: camera)
+  result.world = newWorld(MatchRule(), vsize.float) 
+  result.camera = camera
+  result.worldUI = initWorldUI(result.world)
+  
 
 
 
@@ -56,6 +61,9 @@ proc update*(battle: var Battle) =
   
   handleInputs(battle)
 
+  battle.worldUI.update(battle.world, delta)
+
+
 
 proc draw*(battle: var Battle) =
   dragCamera(battle.camera)
@@ -65,7 +73,8 @@ proc draw*(battle: var Battle) =
   clearBackground(Black)
   battle.world.draw(battle.camera)
   
-  
+  battle.worldUI.draw()
+
   drawFPS(1, 1)
   
   endDrawing()

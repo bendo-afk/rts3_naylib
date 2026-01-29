@@ -1,5 +1,5 @@
 type HpComp* = object
-  maxHp: int
+  maxHp*: int
   hp*: int
 
 

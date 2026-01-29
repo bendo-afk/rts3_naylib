@@ -29,8 +29,8 @@ type World* = object
   matchRule: MatchRule
 
   map: TileMap
-  aUnits: seq[Unit]
-  eUnits: seq[Unit]
+  aUnits*: seq[Unit]
+  eUnits*: seq[Unit]
 
   attackSystem: AttackSystem
   heightSystem: HeightSystem
@@ -103,7 +103,6 @@ proc update*(world: var World, delta: float) =
     if itc.isChanged:
       world.scoreSystem.onTileChanged(itc.tile, i == 0, getTime())
 
-  discard
 
 
 proc draw*(world: World, camera: Camera2D) =
@@ -116,6 +115,7 @@ proc draw*(world: World, camera: Camera2D) =
     for e in world.eUnits:
       if e.vision.visibleState == visVisible:
         drawCircle(e.move.pos, unitSize.float32, Red)
+        drawLine(e.move.pos, e.move.pos + Vector2(x: 1000 * cos(e.attack.turretAngle), y: 1000 * sin(e.attack.turretAngle)), 2, RayWhite)
     
     if world.dragBox.dragging:
       drawRectangle(world.dragBox.rect, boxColor)

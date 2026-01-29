@@ -7,7 +7,7 @@ type
     min, max, value: float32
     bgColor, fgColor: Color
 
-  DiffHpBar = object of ImmHpBar
+  DiffHpBar* = object of ImmHpBar
     timer: float32
     leftTimer: float32 = 0
     lastValue: float32
