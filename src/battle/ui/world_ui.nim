@@ -1,78 +1,63 @@
 import raylib
-import hp_bar, ui_settings, align_vertical
+import hp_bar, ui_settings, align_vertical, side_unit_ui
 import ../world
 
 type
   WorldUI* = object
     uiSettings: UISettings
 
-    allyColRights: seq[int32]
-    allySideBars: seq[DiffHpBar]
-    enemySideBars: seq[DiffHpBar]
+    allySideUIs: seq[SideUnitUI]
+    allyColWidths: seq[int32]
+    enemySideUIs: seq[SideUnitUI]
+    enemyColWidths: seq[int32]
 
 
 proc initWorldUI*(world: World): WorldUI =
   result.uiSettings = UISettings()
+  let s = result.uiSettings
+  let fontSize = s.sideFontSize.int32
   
   # damage speed height
-  var texts: seq[seq[string]]
-  texts.setLen(world.aUnits.len)
+  var allyTexts: seq[seq[string]]
+  for i in 0..<world.aUnits.len:
+    allyTexts.add(@[s.names[i], $world.aUnits[i].attack.damage, $world.aUnits[i].move.speed, $world.aUnits[i].vision.height])
+  result.allyColWidths = getColWidths(allyTexts, fontSize)
+
+  var aPos = Vector2(x: s.sideSideMargin.float32, y: s.sideTopMargin)
+  var barSize = Vector2(x: s.sideBarX, y: s.sideFontSize)
   for i, a in world.aUnits:
-    texts[i] = @[result.uiSettings.names[i], $a.attack.damage, $a.move.speed, $a.vision.height]
-  
-  var padding = 20'i32
-  var colRights = getColRights(texts, result.uiSettings.sideFontSize.int32, padding)
-  for c in colRights.mitems:
-    c += result.uiSettings.sideSideMargin.int32
-  result.allyColRights = colRights
+    let bar = initDiffHpBar(barSize, 0'f32, a.hp.maxHp.float32, s.barBg, s.allyColor, 1'f32, s.allyColor.colorBrightness(s.DiffBarBright))
+    result.allySideUIs.add(initSideUnitUI(aPos, bar, allyTexts[i], fontSize))
+    aPos.y += s.sideFontSize + 10
 
-  var pos = Vector2(x: colRights[^1].float32 + padding.float32, y: result.uiSettings.sideTopMargin)
-  var size = Vector2(x: result.uiSettings.sideBarX, y: result.uiSettings.sideFontSize)
-  for a in world.aUnits:
-    result.allySideBars.add(initDiffHpBar(
-        pos, size, 0'f32, a.hp.maxHp.float32, result.uiSettings.barBg,
-        result.uiSettings.allyColor, 1'f32,
-        result.uiSettings.allyColor.colorBrightness(result.uiSettings.DiffBarBright))
-    )
-    pos.y += result.uiSettings.sideFontSize + 10
+  var enemyTexts: seq[seq[string]]
+  for i in 0..<world.eUnits.len:
+    enemyTexts.add(@[s.names[i], $world.eUnits[i].attack.damage, $world.eUnits[i].move.speed, $world.eUnits[i].vision.height])
+  result.enemyColWidths = getColWidths(enemyTexts, fontSize)
 
-  pos = Vector2(x: getScreenWidth().float32 - pos.x, y: result.uiSettings.sideTopMargin)
-  pos.y += size.y
-  size.x *= -1
-  size.y *= -1
+  var ePos = Vector2(x: getScreenWidth().float32 - s.sideSideMargin, y: s.sideTopMargin)
+  barSize = Vector2(x: -s.sideBarX, y: s.sideFontSize)
+  for i, e in world.eUnits:
+    let bar = initDiffHpBar(barSize, 0'f32, e.hp.maxHp.float32, s.barBg, s.enemyColor, 1'f32, s.enemyColor.colorBrightness(s.DiffBarBright))
+    result.enemySideUIs.add(initSideUnitUI(ePos, bar, enemyTexts[i], fontSize))
+    ePos.y += s.sideFontSize + 10
 
-  for e in world.eUnits:
-    result.enemySideBars.add(initDiffHpBar(
-        pos, size, 0'f32, e.hp.maxHp.float32, result.uiSettings.barBg,
-        result.uiSettings.enemyColor, 1'f32,
-        result.uiSettings.enemyColor.colorBrightness(result.uiSettings.DiffBarBright))
-    )
-    pos.y += result.uiSettings.sideFontSize + 10
 
 
 proc update*(worldUI: var WorldUI, world: World, delta: float32) =
   for i, a in world.aUnits:
-    worldUI.allySideBars[i].updateDiffHpBar(a.hp.hp.float32, delta)
+    worldUI.allySideUIs[i].bar.updateDiffHpBar(a.hp.hp.float32, delta)
   for i, e in world.eUnits:
-    worldUI.enemySideBars[i].updateDiffHpBar(e.hp.hp.float32, delta)
+    worldUI.enemySideUIs[i].bar.updateDiffHpBar(e.hp.hp.float32, delta)
 
 
 proc draw*(worldUI: WorldUI, world: World) =
   let fontSize = worldUI.uiSettings.sideFontSize.int32
-  for i, a in world.aUnits:
-    let
-      (name, p0, p1, p2) = (worldUI.uiSettings.names[i], $a.attack.damage, $a.move.speed, $a.vision.height)
-      w0 = measureText(name, fontSize)
-      w1 = measureText(p0, fontSize)
-      w2 = measureText(p1, fontSize)
-      w3 = measureText(p2, fontSize)
-      bar = worldUI.allySideBars[i]
-    drawText(name, worldUI.allyColRights[0] - w0, bar.pos.y.int32, fontSize, RayWhite)
-    drawText(p0, worldUI.allyColRights[1] - w1, bar.pos.y.int32, fontSize, RayWhite)
-    drawText(p1, worldUI.allyColRights[2] - w2, bar.pos.y.int32, fontSize, RayWhite)
-    drawText(p2, worldUI.allyColRights[3] - w3, bar.pos.y.int32, fontSize, RayWhite)
+  let padding = 15.float32
 
-  for side in [worldUI.allySideBars, worldUI.enemySideBars]:
-    for b in side:
-      b.drawHpBar()
-
+  for i, u in worldUI.allySideUIs:
+    let unit = world.aUnits[i]
+    u.draw(worldUI.allyColWidths, fontSize, padding, true, unit.attack.leftReloadTime, unit.attack.maxReloadTime)
+  for i, u in worldUI.enemySideUIs:
+    let unit = world.eUnits[i]
+    u.draw(worldUI.enemyColWidths, fontSize, padding, false, unit.attack.leftReloadTime, unit.attack.maxReloadTime)

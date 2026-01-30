@@ -1,19 +1,10 @@
 import raylib
 
 
-proc getColRights*(texts: seq[seq[string]], fontSize: int32, padding: int32): seq[int32] =
-  let length = texts[0].len
-  var maxWidth: seq[int32]
-  maxWidth.setLen(length)
-  var colRight: seq[int32]
-  colRight.setLen(length)
+proc getColWidths*(texts: seq[seq[string]], fontSize: int32): seq[int32] =
+  let colCount = texts[0].len
+  result.setLen(colCount)
   
-  for r in texts:
-    for i, text in r:
-      maxWidth[i] = max(maxWidth[i], measureText(text, fontSize))
-  
-  colRight[0] = maxWidth[0]
-  for i in 1..colRight.high:
-    colRight[i] = colRight[i - 1] + padding + maxWidth[i]
-  
-  return colRight
+  for row in texts:
+    for i, text in row:
+      result[i] = max(result[i], measureText(text, fontSize))

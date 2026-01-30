@@ -2,9 +2,8 @@ import raylib
 
 type
   ImmHpBar = object of RootObj
-    pos*: Vector2
-    size: Vector2
-    min, max, value: float32
+    size*: Vector2
+    min, max, value*: float32
     bgColor, fgColor: Color
 
   DiffHpBar* = object of ImmHpBar
@@ -13,8 +12,7 @@ type
     lastValue: float32
     diffColor: Color
 
-template assignArgs(pos, size, min, max, bgColor, fgColor) =
-  result.pos = pos
+template assignArgs(size, min, max, bgColor, fgColor) =
   result.size = size
   result.min = min
   result.max = max
@@ -22,11 +20,11 @@ template assignArgs(pos, size, min, max, bgColor, fgColor) =
   result.bgColor = bgColor
   result.fgColor = fgColor
 
-proc initImmHpBar*(pos, size: Vector2, min, max: float32, bgColor, fgColor: Color): ImmHpBar =
-  assignArgs(pos, size, min, max, bgColor, fgColor)
+proc initImmHpBar*(size: Vector2, min, max: float32, bgColor, fgColor: Color): ImmHpBar =
+  assignArgs(size, min, max, bgColor, fgColor)
 
-proc initDiffHpBar*(pos, size: Vector2, min, max: float32, bgColor, fgColor: Color, timer: float32, diffColor: Color): DiffHpBar =
-  assignArgs(pos, size, min, max, bgColor, fgColor)
+proc initDiffHpBar*(size: Vector2, min, max: float32, bgColor, fgColor: Color, timer: float32, diffColor: Color): DiffHpBar =
+  assignArgs(size, min, max, bgColor, fgColor)
   result.timer = timer
   result.lastValue = max
   result.diffColor = diffColor
@@ -43,25 +41,35 @@ proc updateDiffHpBar*(hpBar: var DiffHpBar, value: float32, delta: float32) =
     hpBar.lastValue = hpBar.value
 
 
-proc drawBg(hpBar: ImmHpBar) =
-  drawRectangle(hpBar.pos, hpBar.size, hpBar.bgColor)
+proc drawRectangleRev(pos, size: Vector2, color: Color) =
+  var
+    actualPos = pos
+    actualSize = size
+  if size.x < 0:
+    actualSize.x = size.x.abs
+    actualPos.x += size.x
+  drawRectangle(actualPos, actualSize, color)
+    
 
-proc drawFg(hpBar: ImmHpBar) =
+proc drawBg(hpBar: ImmHpBar, pos: Vector2) =
+  drawRectangleRev(pos, hpBar.size, hpBar.bgColor)
+
+proc drawFg(hpBar: ImmHpBar, pos: Vector2) =
   let leftSize = Vector2(x: hpBar.size.x * (hpBar.value - hpBar.min) / (hpBar.max - hpBar.min), y: hpBar.size.y)
-  drawRectangle(hpBar.pos, leftSize, hpBar.fgColor)
+  drawRectangleRev(pos, leftSize, hpBar.fgColor)
 
-proc drawHpBar*(hpBar: ImmHpBar) =
-  drawBg(hpBar)
-  drawFg(hpBar)
+proc drawHpBar*(hpBar: ImmHpBar, pos: Vector2) =
+  drawBg(hpBar, pos)
+  drawFg(hpBar, pos)
 
-proc drawHpBar*(hpBar: DiffHpBar) =
-  drawBg(hpBar)
+proc drawHpBar*(hpBar: DiffHpBar, pos: Vector2) =
+  drawBg(hpBar, pos)
 
   if hpBar.leftTimer > 0:
     let diffSize = Vector2(x: hpBar.size.x * (hpBar.lastValue - hpBar.min) / (hpBar.max - hpBar.min), y: hpBar.size.y)
-    drawRectangle(hpBar.pos, diffSize, hpBar.diffColor)
+    drawRectangleRev(pos, diffSize, hpBar.diffColor)
 
-  drawFg(hpBar)
+  drawFg(hpBar, pos)
 
 
 when isMainModule:
@@ -75,7 +83,7 @@ when isMainModule:
     fg = SkyBlue
     timer = 1.float32
     diff = fg.colorBrightness(0.5)
-  var hpBar = initDiffHpBar(pos, size, min, max, bg, fg, timer, diff)
+  var hpBar = initDiffHpBar(size, min, max, bg, fg, timer, diff)
 
   initWindow(900, 800, "raylib example - binary search tree")
 
@@ -83,7 +91,7 @@ when isMainModule:
     hpBar.updateDiffHpBar(value, getFrameTime())
 
     beginDrawing()
-    hpBar.drawHpBar()
+    hpBar.drawHpBar(pos)
 
     drawRectangle(pos, Vector2(x: -300, y: -90), RayWhite)
 
