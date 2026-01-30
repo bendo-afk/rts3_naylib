@@ -73,7 +73,7 @@ proc draw*(battle: var Battle) =
   clearBackground(Brown)
   battle.world.draw(battle.camera)
   
-  battle.worldUI.draw()
+  battle.worldUI.draw(battle.world)
 
   drawFPS(1, 1)
   

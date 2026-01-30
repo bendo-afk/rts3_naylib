@@ -2,7 +2,7 @@ import raylib, raymath
 
 
 type MoveComp* = object
-  speed: int
+  speed*: int
   pos*: Vector2
   movingWeight*: float
   path*: seq[Vector2]

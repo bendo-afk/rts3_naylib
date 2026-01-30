@@ -2,7 +2,7 @@ import raylib
 
 type
   ImmHpBar = object of RootObj
-    pos: Vector2
+    pos*: Vector2
     size: Vector2
     min, max, value: float32
     bgColor, fgColor: Color
