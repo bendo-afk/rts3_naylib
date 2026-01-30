@@ -3,7 +3,7 @@ import raylib
 type
   UISettings* = object
     scoreSize*: float32 = 40
-    scoreCdSize*: float32 = 30
+    heightCdSize*: float32 = 30
 
     barBg*: Color = DarkGray
     DiffBarBright*: float32 = 0.5

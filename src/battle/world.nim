@@ -33,9 +33,9 @@ type World* = object
   eUnits*: seq[Unit]
 
   attackSystem: AttackSystem
-  heightSystem: HeightSystem
+  heightSystem*: HeightSystem
   moveSystem: MoveSystem
-  scoreSystem: ScoreSystem
+  scoreSystem*: ScoreSystem
   visionSystem: VisionSystem
 
   dragBox*: DragBox

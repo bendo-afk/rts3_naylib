@@ -17,18 +17,27 @@ proc initSideUnitUI*(pos: Vector2, bar: DiffHpBar, stats: seq[string], fontSize:
 
 
 proc draw*(u: SideUnitUI, colWidths: seq[int32], fontSize: int32, padding: float32, isAlly: bool, leftReload, maxReload: float) =
+  let
+    font = getFontDefault()
+    spacing = (fontSize / 10).float32
   if isAlly:
     # --- 味方: [Text0][Text1]... [HPBar] ---
     var currX = u.basePos.x
     for i in 0..<u.stats.len:
-      # カラム内右寄せ (現在位置 + カラム幅 - 文字幅)
-      let drawX = currX + colWidths[i].float32 - u.statsWidths[i].float32
-      drawText(u.stats[i], drawX.int32, u.basePos.y.int32, fontSize, RayWhite)
+      let posX = currX + colWidths[i].float32
+      drawText(font, u.stats[i], 
+          Vector2(x: posX, y: u.basePos.y), 
+          Vector2(x: u.statsWidths[i].float32, y: 0), # 右詰め設定
+          0.0, fontSize.float, spacing, RayWhite)
       currX += colWidths[i].float32 + padding
     u.bar.drawHpBar(Vector2(x: currX, y: u.basePos.y))
     let hpValue = $u.bar.value.int
-    let hpPosX = currX + (u.bar.size.x - measureText(hpValue, fontSize).float32) / 2
-    drawText(hpValue, hpPosX.int32, u.basePos.y.int32, fontSize, RayWhite)
+    let hpWidth = measureText(hpValue, fontSize)
+    let barMidX = currX + u.bar.size.x / 2
+    drawText(font, hpValue,
+        Vector2(x: barMidX, y: u.basePos.y),
+        Vector2(x: hpWidth / 2, y: 0), # 中央揃え設定
+        0.0, fontSize.float, spacing, RayWhite)
 
     let reloadText = fmt"{leftReload: .1f}" & "/" & fmt"{maxReload: .1f}"
     drawText(reloadText, (currX + u.bar.size.x + padding).int32, u.basePos.y.int32, fontSize, RayWhite)

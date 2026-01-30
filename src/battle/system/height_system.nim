@@ -4,7 +4,7 @@ import ../unit/unit
 type
   # チームごとの進行状態をまとめる
   ActionState = ref object
-    leftCd: float
+    leftCd*: float
     lockedUnit: Unit
     targetTile: Vector2i
     isRaise: bool
@@ -16,7 +16,7 @@ type
 type HeightSystem* = object
   map: TileMap
   maxCd: float
-  states: array[2, ActionState]
+  states*: array[2, ActionState]
   areChanged*: array[2, IsChanged]
 
 
