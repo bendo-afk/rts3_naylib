@@ -18,17 +18,11 @@ type MinimalParams = tuple
   pos: Vector2
 
 
-var boxColor = Color(r: 0, g: 178, b: 255, a: 76)
-var lineColor = Color(r: 0, g: 127, b: 255, a: 153)
-
-
-var unitSize = 10
-
 
 type World* = object
   matchRule: MatchRule
 
-  map: TileMap
+  map*: TileMap
   aUnits*: seq[Unit]
   eUnits*: seq[Unit]
 
@@ -105,21 +99,6 @@ proc update*(world: var World, delta: float) =
 
 
 
-proc draw*(world: World, camera: Camera2D) =
-  mode2D(camera):
-    world.map.draw_map()
-    for a in world.aUnits:
-      drawCircle(a.move.pos, unitSize.float32, RayWhite)
-      drawLine(a.move.pos, a.move.pos + Vector2(x: 1000 * cos(a.attack.turretAngle), y: 1000 * sin(a.attack.turretAngle)), 2, RayWhite)
-    
-    for e in world.eUnits:
-      if e.vision.visibleState == visVisible:
-        drawCircle(e.move.pos, unitSize.float32, Red)
-        drawLine(e.move.pos, e.move.pos + Vector2(x: 1000 * cos(e.attack.turretAngle), y: 1000 * sin(e.attack.turretAngle)), 2, RayWhite)
-    
-    if world.dragBox.dragging:
-      drawRectangle(world.dragBox.rect, boxColor)
-      drawRectangleLines(world.dragBox.rect, 2 / camera.zoom,lineColor)
     
 
 

@@ -1,7 +1,7 @@
 import raylib
 
 type
-  ImmHpBar = object of RootObj
+  ImmHpBar* = object of RootObj
     size*: Vector2
     min, max, value*: float32
     bgColor, fgColor: Color
@@ -29,6 +29,9 @@ proc initDiffHpBar*(size: Vector2, min, max: float32, bgColor, fgColor: Color, t
   result.lastValue = max
   result.diffColor = diffColor
 
+
+proc updateImmHpBar*(bar: var ImmHpBar, value: float32) =
+  bar.value = value
 
 proc updateDiffHpBar*(hpBar: var DiffHpBar, value: float32, delta: float32) =
   hpBar.leftTimer = max(0, hpBar.leftTimer - delta)

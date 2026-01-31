@@ -1,5 +1,5 @@
 import raylib
-import ui_settings, sides_ui, top_ui
+import ui_settings, sides_ui, top_ui, in_ui
 import ../world
 
 type
@@ -7,6 +7,7 @@ type
     uiSettings: UISettings
     sideUI: SideUI
     topUI: TopUI
+    inUI: InUI
 
 
 
@@ -15,17 +16,22 @@ proc initWorldUI*(world: World): WorldUI =
   let s = result.uiSettings
   result.sideUI = initSideUI(s, world.aUnits, world.eUnits)
   result.topUI = initTopUI(s)
+  result.inUI = initInUI(s, world.aUnits, world.eUnits)
 
 
 proc update*(worldUI: var WorldUI, world: World, delta: float32) =
   worldUI.sideUI.update(world.aUnits, world.eUnits, delta)
 
 
-proc draw*(worldUI: WorldUI, world: World) =
-  let fontSize = worldUI.uiSettings.sideFontSize.int32
+
+proc draw*(self: WorldUI, world: World, camera: Camera2D) =
+  let fontSize = self.uiSettings.sideFontSize.int32
   let padding = 15.float32
-  worldUI.sideUI.draw(world.aUnits, world.eUnits, fontSize, padding)
 
-  worldUI.topUI.draw(world.scoreSystem.aScore, world.scoreSystem.eScore, world.heightSystem.states[0].leftCd, world.heightSystem.states[1].leftCd)
 
+  self.inUI.draw(world, camera)
+
+  self.sideUI.draw(world.aUnits, world.eUnits, fontSize, padding)
+
+  self.topUI.draw(world.scoreSystem.aScore, world.scoreSystem.eScore, world.heightSystem.states[0].leftCd, world.heightSystem.states[1].leftCd)
 
