@@ -4,6 +4,7 @@ export height_action, hp, move, vision, attack
 
 
 type Unit* = ref object
+  id*: int
   attack*: AttackComp
   heightAction*: HeightActionComp
   hp*: HpComp
@@ -15,7 +16,7 @@ type Unit* = ref object
 
 proc newUnit*(damage: int, traverseSpeed, angleMargin,
         maxReloadTime, leftReloadTime, turretAngle: float,
-        maxTimer: float, maxHp: int, speed: int, height: float, pos: Vector2): Unit =
+        maxTimer: float, maxHp: int, speed: int, height: float, pos: Vector2, id: int): Unit =
   let
     attack = newAttackComp(damage, traverseSpeed, angleMargin,
         maxReloadTime, leftReloadTime, turretAngle)
@@ -23,4 +24,4 @@ proc newUnit*(damage: int, traverseSpeed, angleMargin,
     hp = newHpComp(maxHp)
     move = newMoveComp(speed, pos)
     vision = newVisionComp(height)
-  Unit(attack: attack, heightAction: heightAction, hp: hp, move: move, vision: vision)
+  Unit(attack: attack, heightAction: heightAction, hp: hp, move: move, vision: vision, id: id)

@@ -21,6 +21,7 @@ proc initWorldUI*(world: World): WorldUI =
 
 proc update*(worldUI: var WorldUI, world: World, delta: float32) =
   worldUI.sideUI.update(world.aUnits, world.eUnits, delta)
+  worldUI.inUI.update(world.aUnits, world.eUnits, delta)
 
 
 

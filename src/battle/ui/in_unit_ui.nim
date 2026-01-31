@@ -30,7 +30,7 @@ proc initInUnitUI*(unit: Unit, name: string, fontSize: int32, barSizeX, barRatio
 
 proc update*(self: var InUnitUI, hp, leftReload: float32, delta: float32) =
   self.hpBar.updateDiffHpBar(hp, delta)
-  self.reloadBar.updateImmHpBar(leftReload)
+  self.reloadBar.updateImmHpBar(self.reloadBar.max - leftReload)
 
 
 proc draw*(self: InUnitUI, pos: Vector2, fontSize: int32, maxNameWidth: int32) =

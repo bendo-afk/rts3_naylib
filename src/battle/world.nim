@@ -35,6 +35,8 @@ type World* = object
   dragBox*: DragBox
 
 
+var currId = 0
+
 
 proc newUnit(mr: MatchRule, params: MinimalParams): Unit =
   let
@@ -44,9 +46,10 @@ proc newUnit(mr: MatchRule, params: MinimalParams): Unit =
     leftReloadTime = maxReloadTime
     turretAngle = 0.float
     maxTimer = mr.heightActionTimer.float
-  newUnit(params.damage, traverseSpeed, angleMargin,
+  result = newUnit(params.damage, traverseSpeed, angleMargin,
         maxReloadTime, leftReloadTime, turretAngle,
-        maxTimer, params.maxHp, params.speed, params.height, params.pos)
+        maxTimer, params.maxHp, params.speed, params.height, params.pos, currId)
+  inc currId
 
 
 proc setupTeam(mr: MatchRule, teamSeq: var seq[Unit], unitsParams: seq[MinimalParams]) =

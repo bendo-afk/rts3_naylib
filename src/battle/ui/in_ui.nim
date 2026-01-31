@@ -1,3 +1,4 @@
+import tables
 import raylib, raymath
 import ../map/tilemap
 import ../unit/unit
@@ -8,9 +9,8 @@ import ui_settings, in_unit_ui
 type
   InUI* = object
     fontSize: int32
-    allyInUI: seq[InUnitUI]
+    unitsInUI: Table[int, InUnitUI]
     maxNameWidth: int32
-    enemyInUI: seq[InUnitUI]
     
     unitSize = 10
     boxColor = Color(r: 0, g: 178, b: 255, a: 76)
@@ -29,16 +29,14 @@ proc initInUI*(s: UISettings, aUnits, eUnits: seq[Unit]): InUI =
     reloadColor = s.inReloadColor
     brightness = s.DiffBarBright
   for i, a in aUnits:
-    result.allyInUI.add(
-      initInUnitUI(a, names[i], fontSize, barSizeX, barRatio, bgColor, s.allyColor,
-          reloadColor, s.allyColor.colorBrightness(brightness)
-      )
+    result.unitsInUI[a.id] = initInUnitUI(
+        a, names[i], fontSize, barSizeX, barRatio, bgColor, s.allyColor,
+        reloadColor, s.allyColor.colorBrightness(brightness)
     )
   for i, e in eUnits:
-    result.enemyInUI.add(
-      initInUnitUI(e, names[i], fontSize, barSizeX, barRatio, bgColor, s.enemyColor,
-          reloadColor, s.enemyColor.colorBrightness(brightness)
-      )
+    result.unitsInUI[e.id] = initInUnitUI(
+        e, names[i], fontSize, barSizeX, barRatio, bgColor, s.enemyColor,
+        reloadColor, s.enemyColor.colorBrightness(brightness)
     )
   for n in names:
     result.maxNameWidth = max(result.maxNameWidth, measureText(n, fontSize))
@@ -49,10 +47,10 @@ proc initInUI*(s: UISettings, aUnits, eUnits: seq[Unit]): InUI =
 
 
 proc update*(self: var InUI, aUnits, eUnits: seq[Unit], delta: float32) =
-  for i, a in aUnits:
-    self.allyInUI[i].update(a.hp.hp.float32, a.attack.leftReloadTime.float32, delta)
-  for i, e in eUnits:
-    self.enemyInUI[i].update(e.hp.hp.float32, e.attack.leftReloadTime.float32, delta)
+  for a in aUnits:
+    self.unitsInUI[a.id].update(a.hp.hp.float32, a.attack.leftReloadTime.float32, delta)
+  for e in eUnits:
+    self.unitsInUI[e.id].update(e.hp.hp.float32, e.attack.leftReloadTime.float32, delta)
 
 
 
@@ -74,16 +72,31 @@ proc drawWorld*(world: World, camera: Camera2D, unitSize: int, boxColor, lineCol
 
 
 
-proc isNear(pos1, pos2: Vector2): bool =
-  if pos1 == pos2:
-    return true
-  else:
-    return false
+proc toKey(pos: Vector2): Vector2 =
+  return Vector2(x: pos.x.round, y: pos.y.round)
 
 
 proc draw*(self: InUI, world: World, camera: Camera2D) =
   world.drawWorld(camera, self.unitSize, self.boxColor, self.lineColor)
   
-  mode2D(camera):
-    for i, a in world.aUnits:
-      self.allyInUI[i].draw(a.move.pos, self.fontSize, self.maxNameWidth)
+
+  var groups: Table[Vector2, seq[int]]
+
+  let allUnits = world.aUnits & world.eUnits
+
+  for u in allUnits:
+    if u in world.eUnits and u.vision.visibleState != visVisible:
+      continue
+
+    let key = u.move.pos.toKey()
+    if not groups.hasKey(key):
+      groups[key] = @[]
+    groups[key].add(u.id)
+
+  let stackOffset = self.fontSize.float32
+  for key, ids in groups:
+    for count, id in ids:
+      var screenPos = key.getWorldToScreen2D(camera)
+      screenPos.y -= stackOffset * (ids.len - count).float32 # + 20
+      self.unitsInUI[id].draw(screenPos, self.fontSize, self.maxNameWidth)
+
