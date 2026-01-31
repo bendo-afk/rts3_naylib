@@ -21,40 +21,39 @@ proc draw*(u: SideUnitUI, colWidths: seq[int32], fontSize: int32, padding: float
     font = getFontDefault()
     spacing = (fontSize / 10).float32
   if isAlly:
-    # --- 味方: [Text0][Text1]... [HPBar] ---
     var currX = u.basePos.x
     for i in 0..<u.stats.len:
       let posX = currX + colWidths[i].float32
-      drawText(font, u.stats[i], 
-          Vector2(x: posX, y: u.basePos.y), 
-          Vector2(x: u.statsWidths[i].float32, y: 0), # 右詰め設定
+      drawText(font, u.stats[i], Vector2(x: posX, y: u.basePos.y), 
+          Vector2(x: u.statsWidths[i].float32, y: 0),
           0.0, fontSize.float, spacing, RayWhite)
       currX += colWidths[i].float32 + padding
+
     u.bar.drawHpBar(Vector2(x: currX, y: u.basePos.y))
     let hpValue = $u.bar.value.int
     let hpWidth = measureText(hpValue, fontSize)
     let barMidX = currX + u.bar.size.x / 2
-    drawText(font, hpValue,
-        Vector2(x: barMidX, y: u.basePos.y),
-        Vector2(x: hpWidth / 2, y: 0), # 中央揃え設定
-        0.0, fontSize.float, spacing, RayWhite)
+    drawText(font, hpValue, Vector2(x: barMidX, y: u.basePos.y),
+        Vector2(x: hpWidth / 2, y: 0), 0.0, fontSize.float, spacing, RayWhite)
 
     let reloadText = fmt"{leftReload: .1f}" & "/" & fmt"{maxReload: .1f}"
     drawText(reloadText, (currX + u.bar.size.x + padding).int32, u.basePos.y.int32, fontSize, RayWhite)
 
   else:
-    # テキストはバーの右側（padding分空ける）から開始
     var currX = u.basePos.x
-    # 名前(stats[0])が一番右に来るように、statsを逆順にループ
     for i in 0..<u.stats.len:
-      # 敵側はシンプルに左詰めで並べる
-      let drawX = currX - u.statsWidths[i].float32
-      drawText(u.stats[i], drawX.int32, u.basePos.y.int32, fontSize, RayWhite)
+      drawText(font, u.stats[i], Vector2(x: currX, y: u.basePos.y),
+          Vector2(x: u.statsWidths[i].float32, y: 0),
+          0.0, fontSize.float, spacing, RayWhite)
       currX -= colWidths[i].float32 + padding
+
     u.bar.drawHpBar(Vector2(x: currX, y: u.basePos.y))
-    let hpValue = $u.bar.value.int
-    let hpPosX = currX - (u.bar.size.x.abs + measureText(hpValue, fontSize).float32) / 2
-    drawText(hpValue, hpPosX.int32, u.basePos.y.int32, fontSize, RayWhite)
+    let
+      hpValue = $u.bar.value.int
+      hpWidth = measureText(hpValue, fontSize)
+      barMidX = currX + u.bar.size.x / 2
+    drawText(font, hpValue, Vector2(x: barMidX, y: u.basePos.y),
+        Vector2(x: hpWidth / 2, y: 0), 0.0, fontSize.float, spacing, RayWhite)
 
     let reloadText = fmt"{leftReload: .1f}" & "/" & fmt"{maxReload: .1f}"
     drawText(reloadText, (currX + u.bar.size.x - padding - measureText(reloadText, fontSize).float32).int32, u.basePos.y.int32, fontSize, RayWhite)

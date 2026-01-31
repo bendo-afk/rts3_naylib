@@ -57,7 +57,7 @@ proc update*(self: var HeightSystem, delta: float) =
     self.areChanged[i].isChanged = false
 
     if state.leftCd > 0:
-      state.leftCd -= delta
+      state.leftCd = max(0, state.leftCd - delta)
     
     if not state.lockedUnit.isNil:
       var u = state.lockedUnit
