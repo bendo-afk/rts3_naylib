@@ -4,12 +4,11 @@ import ../rules/conversion
 
 type MoveSystem* = object
   diff2speed: Conversion
-  units: seq[Unit]
   map: TileMap
 
 
-proc newMoveSystem*(diff2speed: Conversion, units: seq[Unit], map: TileMap): MoveSystem =
-  MoveSystem(diff2speed: diff2speed, units: units, map: map)
+proc newMoveSystem*(diff2speed: Conversion, map: TileMap): MoveSystem =
+  MoveSystem(diff2speed: diff2speed, map: map)
 
 
 proc setMultiplier*(moveSys: MoveSystem, mComp: var MoveComp) =
@@ -24,8 +23,8 @@ proc setMultiplier*(moveSys: MoveSystem, mComp: var MoveComp) =
   mComp.multiplier = moveSys.diff2speed.calc(diff.float)
   
 
-proc update*(moveSys: var MoveSystem, delta: float32) =
-  for u in moveSys.units.mitems:
+proc update*(moveSys: MoveSystem, units: var seq[Unit], delta: float32) =
+  for u in units.mitems:
     if u.heightAction.isChanging:
       continue
     u.move.movePos2Pos(delta)
@@ -33,5 +32,3 @@ proc update*(moveSys: var MoveSystem, delta: float32) =
       u.move.path.delete(0)
       u.move.movingWeight = 0
       setMultiplier(moveSys, u.move)
-
-

@@ -23,8 +23,7 @@ type World* = object
   matchRule: MatchRule
 
   map*: TileMap
-  aUnits*: seq[Unit]
-  eUnits*: seq[Unit]
+  units: seq[Unit]
 
   attackSystem: AttackSystem
   heightSystem*: HeightSystem
@@ -52,64 +51,66 @@ proc newUnit(mr: MatchRule, params: MinimalParams): Unit =
   inc currId
 
 
-proc setupTeam(mr: MatchRule, teamSeq: var seq[Unit], unitsParams: seq[MinimalParams]) =
-  for p in unitsParams:
-    teamSeq.add(newUnit(mr, p))
-
 
 proc newWorld*(matchRule: MatchRule, vsize: float): World =
-  let map = newTileMap(vsize, matchRule.maxX, matchRule.maxY, matchRule.maxHeight)
-  
-  var aUnits: seq[Unit]
+  result.matchRule = matchRule
+  result.map = newTileMap(vsize, matchRule.maxX, matchRule.maxY, matchRule.maxHeight)
+
+  result.units = newseq[Unit]()
+
   var aParams: seq[MinimalParams]
   aParams.setLen(7)
-  var param: MinimalParams = (1, 1.float, 10, 1, 0.float, map.tile2pos(Vector2i(x: 0, y: 0)))
+  var param: MinimalParams = (1, 1.float, 10, 1, 0.float, result.map.tile2pos(Vector2i(x: 0, y: 0)))
   aParams.fill(param)
-  setupTeam(matchRule, aUnits, aParams)
+  for p in aParams:
+    var u = newUnit(matchRule, p)
+    u.team = Team.Ally
+    u.id = result.units.len
+    result.units.add(u)
 
-  param.pos = map.tile2pos(Vector2i(x: matchRule.maxX, y: matchRule.maxY))
+  param.pos = result.map.tile2pos(Vector2i(x: matchRule.maxX, y: matchRule.maxY))
   aParams.fill(param)
-  var eUnits: seq[Unit]
   var eParams = aParams
-  setupTeam(matchRule, eUnits, eParams)
+  for p in eParams:
+    var u = newUnit(matchRule, p)
+    u.team = Team.Enemy
+    u.id = result.units.len
+    result.units.add(u)
 
+  result.attackSystem = newAttackSystem()
+  result.moveSystem = newMoveSystem(matchRule.diff2speed, result.map)
+  result.visionSystem = newVisionSystem(result.map, matchRule.lMargin, matchRule.sMargin)
+  result.heightSystem = newHeightSystem(result.map, matchRule.heightCd)
+  result.scoreSystem = newScoreSystem(matchRule.scoreInterval, matchRule.scoreKaisuu, matchRule.scoreBase, matchRule.dist2penalty)
+  result.dragBox = newDragBox()
 
-  let units = aUnits.concat(eUnits)
-  let attackSys = newAttackSystem(units)
-  let moveSys = newMoveSystem(matchRule.diff2speed, units, map)
-  let visionSys = newVisionSystem(map, matchRule.lMargin, matchRule.sMargin, aUnits, eUnits)
-  let heightSys = newHeightSystem(map, matchRule.heightCd)
-  let scoreSys = newScoreSystem(matchRule.scoreInterval, matchRule.scoreKaisuu, matchRule.scoreBase, matchRule.dist2penalty)
+  
 
-  let dragBox = newDragBox()
-
-  return World(matchRule: matchRule, map: map, aUnits: aUnits, eUnits: eUnits, heightSystem: heightSys, moveSystem: moveSys, visionSystem: visionSys, dragBox: dragBox, attackSystem: attackSys, scoreSystem: scoreSys)
-
-
-
-proc update*(world: var World, delta: float) =
+proc update*(self: var World, delta: float) =
   # deltaってどこで取得すべきなんだ？
-  world.attackSystem.update(delta)
-  world.heightSystem.update(delta)
-  world.moveSystem.update(delta)
-  world.visionSystem.update()
-  world.scoreSystem.update(delta)
+  self.attackSystem.update(self.units, delta)
+  self.heightSystem.update(self.units, delta)
+  self.moveSystem.update(self.units, delta)
+  self.visionSystem.update(self.units)
+  self.scoreSystem.update(delta)
 
-  let areTilesChanged = world.heightSystem.areChanged
+  for u in self.units.mitems:
+    if u.lifeState == lsDying:
+      u.lifeState = lsDead
+
+  let areTilesChanged = self.heightSystem.areChanged
   for i, itc in areTilesChanged:
     if itc.isChanged:
-      world.scoreSystem.onTileChanged(itc.tile, i == 0, getTime())
+      self.scoreSystem.onTileChanged(itc.tile, i == 0, getTime())
 
 
 
-    
-
-
-proc setPath*(world: World, pos: Vector2) =
+proc setPath*(world: var World, pos: Vector2) =
   let toTile = world.map.pos2tile(pos)
   if not isExists(world.map, toTile):
     return
-  for a in world.aUnits:
+  for a in world.units.mitems:
+    if a.team != Ally: continue
     if not a.isSelected:
       continue
     if a.move.movingWeight != 0:
@@ -128,25 +129,29 @@ proc setPath*(world: World, pos: Vector2) =
 
 
 proc selectByBox*(world: var World, rect: Rectangle) =
-  for a in world.aUnits.mitems:
+  for a in world.units.mitems:
+    if a.team != Ally: continue
     if a.move.pos.x >= rect.x and a.move.pos.x <= rect.x + rect.width and
         a.move.pos.y >= rect.y and a.move.pos.y <= rect.y + rect.height:
           a.isSelected = true
 
 proc deselect*(world: var World) =
-  for a in world.aUnits.mitems:
+  for a in world.units.mitems:
+    if a.team != Ally: continue
     a.isSelected = false
 
 
-proc setTargetPos*(self: World, pos: Vector2) =
-  for a in self.aUnits:
+proc setTargetPos*(self: var World, pos: Vector2) =
+  for a in self.units.mitems:
+    if a.team != Ally: continue
     if a.isSelected:
       a.attack.targetPos = pos
 
 
 proc changeHeight*(self: var World, pos: Vector2, isRaise: bool) =
   let tile = self.map.pos2tile(pos)
-  for a in self.aUnits:
+  for a in self.units.mitems:
+    if a.team != Ally: continue
     if not a.isSelected or a.move.movingWeight != 0:
       continue
     self.heightSystem.tryStart(a, true, tile, isRaise)

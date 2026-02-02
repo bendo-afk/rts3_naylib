@@ -3,23 +3,24 @@ import ../unit/unit
 import ../../utils
 
 type AttackSystem* = object
-  units: seq[Unit]
 
-proc newAttackSystem*(units: seq[Unit]): AttackSystem =
-  AttackSystem(units: units)
+proc newAttackSystem*(): AttackSystem =
+  # AttackSystem(units: units)
+  AttackSystem()
 
-proc update*(self: AttackSystem, delta: float) =
-  for u in self.units:
+proc update*(self: AttackSystem, units: var seq[Unit], delta: float) =
+  for u in units.mitems:
     if u.attack.leftReloadTime == 0:
       var minAngleDiff = u.attack.angleMargin
-      var targetEnemy: Unit = nil
-      for v in u.visibleEnemies:
+      var targetEnemyId: UnitId = -1
+      for idx in u.visibleEnemyIds:
+        var v = addr units[idx]
         if v.hp.hp <= 0:
           continue
 
         let diffVec = v.move.pos - u.move.pos
         if diffVec.x == 0 and diffVec.y == 0:
-          targetEnemy = v
+          targetEnemyId = v.id
           break
 
         let targetAngle = diffVec.angle()
@@ -27,10 +28,10 @@ proc update*(self: AttackSystem, delta: float) =
 
         if angleDiff < minAngleDiff:
           minAngleDiff = angleDiff
-          targetEnemy = v
+          targetEnemyId = v.id
       
-      if targetEnemy != nil:
-        targetEnemy.hp.takeDamage(u.attack.damage)
+      if targetEnemyId != -1:
+        units[targetEnemyId].hp.takeDamage(u.attack.damage)
         u.attack.leftReloadTime = u.attack.maxReloadTime
     
     let relTargetPos = u.attack.targetPos - u.move.pos

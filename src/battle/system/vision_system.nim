@@ -8,12 +8,11 @@ const InvalidTile = Vector2i(x: int.low, y: int.low)
 
 type VisionSystem* = object
   map: TileMap
-  aUnits, eUnits: seq[Unit]
   lMargin, sMargin: float
 
 
-proc newVisionSystem*(map: TileMap, lMargin, sMargin: float, aUnits, eUnits: seq[Unit]): VisionSystem =
-  VisionSystem(map: map, lMargin: lMargin, sMargin: sMargin, aUnits: aUnits, eUnits: eUnits)
+proc newVisionSystem*(map: TileMap, lMargin, sMargin: float): VisionSystem =
+  VisionSystem(map: map, lMargin: lMargin, sMargin: sMargin,)
 
 
 proc firstStep*(map: TileMap, last1, last2, cur1, cur2: var Vector2i, pos1, pos2: Vector2) =
@@ -147,21 +146,28 @@ proc isVisible*(visionSystem: VisionSystem, from_pos, to_pos: Vector2, unit_heig
     return visVisible
 
 
-proc resetVision(team: var seq[Unit]) =
-  for u in team.mitems:
+proc resetVision(units: var seq[Unit]) =
+  for u in units.mitems:
     u.vision.visibleState = visNot
-    u.visibleEnemies = @[]
+    u.visibleEnemyIds.setLen(0)
 
-proc update*(self: var VisionSystem) =
-  self.aUnits.resetVision()
-  self.eUnits.resetVision()
+
+proc update*(self: var VisionSystem, units: var seq[Unit]) =
+  units.resetVision()
   
-  for a in self.aUnits.mitems:
-    for e in self.eUnits.mitems:
-      let visState = self.isVisible(a.move.pos, e.move.pos, a.vision.height, e.vision.height)
-
+  for i in 0 ..< units.len:
+    for j in i + 1 ..< units.len:
+      let a = addr units[i]
+      let b = addr units[j]
+      
+      if a.team == b.team: continue
+      
+      let visState = self.isVisible(a.move.pos, b.move.pos, a.vision.height, b.vision.height)
+      
       a.vision.visibleState = max(a.vision.visibleState, visState)
-      e.vision.visibleState = max(e.vision.visibleState, visState)
+      b.vision.visibleState = max(b.vision.visibleState, visState)
+      
       if visState == visVisible:
-        a.visibleEnemies.add(e)
-        e.visibleEnemies.add(a)
+        a.visibleEnemyIds.add(b.id)
+        b.visibleEnemyIds.add(a.id)
+      

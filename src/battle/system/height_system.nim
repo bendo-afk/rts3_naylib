@@ -5,7 +5,7 @@ type
   # チームごとの進行状態をまとめる
   ActionState = ref object
     leftCd*: float
-    lockedUnit: Unit
+    lockedUnitId: UnitId = -1
     targetTile: Vector2i
     isRaise: bool
 
@@ -32,25 +32,20 @@ template s(self: HeightSystem, isAlly: bool): ActionState =
 
 proc canStartAction(self: HeightSystem, isAlly: bool): bool =
   let state = self.s(isAlly)
-  return state.leftCd <= 0 and state.lockedUnit.isNil
+  return state.leftCd <= 0 and state.lockedUnitId == -1
 
 
-proc tryStart*(self: var HeightSystem, unit: Unit, isAlly: bool, tile: Vector2i, isRaise: bool) =
+proc tryStart*(self: var HeightSystem, unit: var Unit, isAlly: bool, tile: Vector2i, isRaise: bool) =
   if not canStartAction(self, isAlly): return
 
   unit.heightAction.isChanging = true
   var state = self.s(isAlly)
-  state.lockedUnit = unit
+  state.lockedUnitId = unit.id
   state.targetTile = tile
   state.isRaise = isRaise  
 
 
-proc stopAction(state: ActionState) =
-  state.lockedUnit.heightAction.reset()
-  state.lockedUnit = nil
-
-
-proc update*(self: var HeightSystem, delta: float) =
+proc update*(self: var HeightSystem, units:seq[Unit], delta: float) =
   var changedTile = Vector2i(x: int.low, y: int.low)
   var isRaise = false
   for i, state in self.states:
@@ -59,21 +54,22 @@ proc update*(self: var HeightSystem, delta: float) =
     if state.leftCd > 0:
       state.leftCd = max(0, state.leftCd - delta)
     
-    if not state.lockedUnit.isNil:
-      var u = state.lockedUnit
+    if not state.lockedUnitId == -1:
+      var u = addr units[state.lockedUnitId]
 
       if not self.map.canChangeHeight(state.targetTile, state.isRaise) or
           not self.map.isMovable(self.map.pos2tile(u.move.pos), state.targetTile):
-        echo 1
         if state.targetTile != changedTile:
-          stopAction(state)
+          u.heightAction.reset()
+          state.lockedUnitId = -1
           continue
         # 同時に同じタイルを同方向に変えたとき、あとのチームがタイルをかえれず、スコアを得られない。
     
       u.heightAction.update(delta)
 
       if u.heightAction.leftTimer <= 0:
-        stopAction(state)
+        u.heightAction.reset()
+        state.lockedUnitId = -1
         state.leftCd = self.maxCd
         if state.targetTile != changedTile or isRaise != state.isRaise:
           self.map.changeHeight(state.targetTile, state.isRaise)

@@ -10,12 +10,13 @@ type
     enemyColWidths: seq[int32]
 
 
-proc initSideUI*(s: UISettings, aUnits, eUnits: seq[Unit]): SideUI =
+proc initSideUI*(s: UISettings, units: seq[Unit]): SideUI =
   let fontSize = s.sideFontSize.int32
   
   var allyTexts: seq[seq[string]]
-  for i in 0..<aUnits.len:
-    allyTexts.add(@[s.names[i], $aUnits[i].attack.damage, $aUnits[i].move.speed, $aUnits[i].vision.height])
+  for a in units:
+    if a.team != Team.Ally: continue
+    allyTexts.add(@[s.names[i], $a.attack.damage, $a.move.speed, $a.vision.height])
   result.allyColWidths = getColWidths(allyTexts, fontSize)
   
   var aPos = Vector2(x: s.sideSideMargin.float32, y: s.sideTopMargin)
