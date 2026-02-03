@@ -9,14 +9,12 @@ import ../utils
 import ../control
 
 
-type MinimalParams = tuple
+type MinimalParams* = tuple
   damage: int
   maxTimer: float
   maxHp: int
   speed: int
   height: float
-  pos: Vector2
-
 
 
 type World* = object
@@ -34,10 +32,8 @@ type World* = object
   dragBox*: DragBox
 
 
-var currId = 0
 
-
-proc newUnit(mr: MatchRule, params: MinimalParams): Unit =
+proc newUnit(mr: MatchRule, params: MinimalParams, pos: Vector2): Unit =
   let
     traverseSpeed = mr.speed2traverse.calc(params.speed.float)
     angleMargin = mr.angleMargin.float
@@ -47,32 +43,25 @@ proc newUnit(mr: MatchRule, params: MinimalParams): Unit =
     maxTimer = mr.heightActionTimer.float
   result = newUnit(params.damage, traverseSpeed, angleMargin,
         maxReloadTime, leftReloadTime, turretAngle,
-        maxTimer, params.maxHp, params.speed, params.height, params.pos, currId)
-  inc currId
+        maxTimer, params.maxHp, params.speed, params.height, pos)
 
 
-
-proc newWorld*(matchRule: MatchRule, vsize: float): World =
+proc newWorld*(matchRule: MatchRule, mapVsize: float, aParams, eParams: seq[MinimalParams]): World =
   result.matchRule = matchRule
-  result.map = newTileMap(vsize, matchRule.maxX, matchRule.maxY, matchRule.maxHeight)
+  result.map = newTileMap(mapVsize, matchRule.maxX, matchRule.maxY, matchRule.maxHeight)
 
   result.units = newseq[Unit]()
-
-  var aParams: seq[MinimalParams]
-  aParams.setLen(7)
-  var param: MinimalParams = (1, 1.float, 10, 1, 0.float, result.map.tile2pos(Vector2i(x: 0, y: 0)))
-  aParams.fill(param)
+  let aPos = result.map.tile2pos(Vector2i(x: 0, y: 0))
   for p in aParams:
-    var u = newUnit(matchRule, p)
+    var u = newUnit(matchRule, p, aPos)
     u.team = Team.Ally
     u.id = result.units.len
+    echo u.id
     result.units.add(u)
 
-  param.pos = result.map.tile2pos(Vector2i(x: matchRule.maxX, y: matchRule.maxY))
-  aParams.fill(param)
-  var eParams = aParams
+  let ePos = result.map.tile2pos(Vector2i(x: matchRule.maxX, y: matchRule.maxY))
   for p in eParams:
-    var u = newUnit(matchRule, p)
+    var u = newUnit(matchRule, p, ePos)
     u.team = Team.Enemy
     u.id = result.units.len
     result.units.add(u)

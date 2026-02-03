@@ -15,8 +15,13 @@ type Battle* = object
 
 proc newBattle*(width, height: float32): Battle =
   let camera = Camera2D(zoom: 1, target: Vector2(x: -100, y: -100), offset: Vector2(x: width / 2, y: height / 2))
-  result.world = newWorld(MatchRule(), vsize.float) 
   result.camera = camera
+  
+  var param = (1, 1.float, 10, 1, 0.float)
+  var aParams = @[param, param]
+  var eParams: seq[MinimalParams] = @[]
+  result.world = newWorld(MatchRule(), vsize.float, aParams, eParams)
+  
   result.worldUI = initWorldUI(result.world)
   
 
