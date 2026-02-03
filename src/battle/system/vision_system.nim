@@ -156,10 +156,13 @@ proc update*(self: var VisionSystem, units: var seq[Unit]) =
   units.resetVision()
   
   for i in 0 ..< units.len:
+    let a = addr units[i]
+    if a[].isDead(): continue
+    
     for j in i + 1 ..< units.len:
-      let a = addr units[i]
       let b = addr units[j]
-      
+      if b[].isDead(): continue
+
       if a.team == b.team: continue
       
       let visState = self.isVisible(a.move.pos, b.move.pos, a.vision.height, b.vision.height)

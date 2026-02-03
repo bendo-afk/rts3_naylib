@@ -19,7 +19,7 @@ proc newBattle*(width, height: float32): Battle =
   
   var param = (1, 1.float, 10, 1, 0.float)
   var aParams = @[param, param]
-  var eParams: seq[MinimalParams] = @[]
+  var eParams: seq[MinimalParams] = @[param]
   result.world = newWorld(MatchRule(), vsize.float, aParams, eParams)
   
   result.worldUI = initWorldUI(result.world)

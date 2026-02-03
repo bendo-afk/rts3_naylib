@@ -49,12 +49,14 @@ proc initInUI*(s: UISettings, units: seq[Unit]): InUI =
 
 proc update*(self: var InUI, units: seq[Unit], delta: float32) =
   for u in units:
+    if u.isDead: continue
     self.unitsInUI[u.id].update(u.hp.hp.float32, u.attack.leftReloadTime.float32, delta)
 
     
 
 proc drawUnits(units: seq[Unit], unitSize: float32) =
   for u in units:
+    if u.isDead: continue
     let isEnemy = u.team == Team.Enemy
     if isEnemy and u.vision.visibleState != visVisible: continue
     
@@ -83,6 +85,7 @@ proc draw*(self: InUI, world: World, camera: Camera2D) =
   var groups: Table[Vector2, seq[int]]
 
   for u in world.units:
+    if u. isDead: continue
     if u.team == Team.Enemy and u.vision.visibleState != visVisible:
       continue
 

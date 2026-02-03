@@ -10,6 +10,8 @@ proc newAttackSystem*(): AttackSystem =
 
 proc update*(self: AttackSystem, units: var seq[Unit], delta: float) =
   for u in units.mitems:
+    if u.isDead(): continue
+
     if u.attack.leftReloadTime == 0:
       var minAngleDiff = u.attack.angleMargin
       var targetEnemyId: UnitId = -1
@@ -31,7 +33,10 @@ proc update*(self: AttackSystem, units: var seq[Unit], delta: float) =
           targetEnemyId = v.id
       
       if targetEnemyId != -1:
-        units[targetEnemyId].hp.takeDamage(u.attack.damage)
+        var v = addr units[targetEnemyId]
+        v.hp.takeDamage(u.attack.damage)
+        if v.hp.hp <= 0:
+          v.lifeState = lsDying
         u.attack.leftReloadTime = u.attack.maxReloadTime
     
     let relTargetPos = u.attack.targetPos - u.move.pos

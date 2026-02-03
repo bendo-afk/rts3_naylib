@@ -24,12 +24,13 @@ type Unit* = object
 proc newUnit*(damage: int, traverseSpeed, angleMargin,
         maxReloadTime, leftReloadTime, turretAngle: float,
         maxTimer: float, maxHp: int, speed: int, height: float, pos: Vector2): Unit =
-  let
-    attack = newAttackComp(damage, traverseSpeed, angleMargin,
+  result.attack = newAttackComp(damage, traverseSpeed, angleMargin,
         maxReloadTime, leftReloadTime, turretAngle)
-    heightAction = newHeightActionComp(maxTimer)
-    hp = newHpComp(maxHp)
-    move = newMoveComp(speed, pos)
-    vision = newVisionComp(height)
-  Unit(attack: attack, heightAction: heightAction, hp: hp, move: move, vision: vision)
+  result.heightAction = newHeightActionComp(maxTimer)
+  result.hp = newHpComp(maxHp)
+  result.move = newMoveComp(speed, pos)
+  result.vision = newVisionComp(height)
+  
 
+proc isDead*(self: Unit): bool =
+  return self.lifeState == lsDead

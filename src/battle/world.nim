@@ -1,4 +1,4 @@
-import algorithm, sequtils
+import sequtils
 import raylib, raymath
 
 import rules/match_rule as mr
@@ -86,6 +86,7 @@ proc update*(self: var World, delta: float) =
   for u in self.units.mitems:
     if u.lifeState == lsDying:
       u.lifeState = lsDead
+      u.isSelected = false
 
   let areTilesChanged = self.heightSystem.areChanged
   for i, itc in areTilesChanged:
@@ -119,7 +120,7 @@ proc setPath*(world: var World, pos: Vector2) =
 
 proc selectByBox*(world: var World, rect: Rectangle) =
   for a in world.units.mitems:
-    if a.team != Ally: continue
+    if a.team != Ally or a.isDead: continue
     if a.move.pos.x >= rect.x and a.move.pos.x <= rect.x + rect.width and
         a.move.pos.y >= rect.y and a.move.pos.y <= rect.y + rect.height:
           a.isSelected = true

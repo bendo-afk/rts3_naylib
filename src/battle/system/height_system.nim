@@ -57,6 +57,11 @@ proc update*(self: var HeightSystem, units:seq[Unit], delta: float) =
     if not state.lockedUnitId == -1:
       var u = addr units[state.lockedUnitId]
 
+      if u[].isDead():
+        u.heightAction.reset()
+        state.lockedUnitId = -1
+        continue
+
       if not self.map.canChangeHeight(state.targetTile, state.isRaise) or
           not self.map.isMovable(self.map.pos2tile(u.move.pos), state.targetTile):
         if state.targetTile != changedTile:
