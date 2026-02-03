@@ -4,7 +4,7 @@ import ../unit/unit
 type
   # チームごとの進行状態をまとめる
   ActionState = ref object
-    leftCd*: float
+    leftCd*: float32
     lockedUnitId: UnitId = -1
     targetTile: Vector2i
     isRaise: bool
@@ -15,12 +15,12 @@ type
 
 type HeightSystem* = object
   map: TileMap
-  maxCd: float
+  maxCd: float32
   states*: array[2, ActionState]
   areChanged*: array[2, IsChanged]
 
 
-proc newHeightSystem*(map: TileMap, maxCd: float): HeightSystem =
+proc newHeightSystem*(map: TileMap, maxCd: float32): HeightSystem =
   result = HeightSystem(map: map, maxCd: maxCd)
   for i in 0 ..< result.states.len:
     result.states[i] = ActionState(leftCd: maxCd)
@@ -45,7 +45,7 @@ proc tryStart*(self: var HeightSystem, unit: var Unit, isAlly: bool, tile: Vecto
   state.isRaise = isRaise  
 
 
-proc update*(self: var HeightSystem, units:seq[Unit], delta: float) =
+proc update*(self: var HeightSystem, units:seq[Unit], delta: float32) =
   var changedTile = Vector2i(x: int.low, y: int.low)
   var isRaise = false
   for i, state in self.states:

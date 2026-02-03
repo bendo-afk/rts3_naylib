@@ -11,10 +11,10 @@ import ../control
 
 type MinimalParams* = tuple
   damage: int
-  maxTimer: float
+  maxTimer: float32
   maxHp: int
   speed: int
-  height: float
+  height: float32
 
 
 type World* = object
@@ -31,24 +31,24 @@ type World* = object
 
   dragBox*: DragBox
 
-  leftMatchTime*: float
+  leftMatchTime*: float32
 
 
 
 proc newUnit(mr: MatchRule, params: MinimalParams, pos: Vector2): Unit =
   let
-    traverseSpeed = mr.speed2traverse.calc(params.speed.float)
-    angleMargin = mr.angleMargin.float
-    maxReloadTime = mr.damage2reload.calc(params.damage.float)
+    traverseSpeed = mr.speed2traverse.calc(params.speed.float32)
+    angleMargin: float32 = mr.angleMargin
+    maxReloadTime = mr.damage2reload.calc(params.damage.float32)
     leftReloadTime = maxReloadTime
-    turretAngle = 0.float
-    maxTimer = mr.heightActionTimer.float
+    turretAngle = 0.float32
+    maxTimer = mr.heightActionTimer
   result = newUnit(params.damage, traverseSpeed, angleMargin,
         maxReloadTime, leftReloadTime, turretAngle,
         maxTimer, params.maxHp, params.speed, params.height, pos)
 
 
-proc newWorld*(matchRule: MatchRule, mapVsize: float, aParams, eParams: seq[MinimalParams]): World =
+proc newWorld*(matchRule: MatchRule, mapVsize: float32, aParams, eParams: seq[MinimalParams]): World =
   result.matchRule = matchRule
   result.map = newTileMap(mapVsize, matchRule.maxX, matchRule.maxY, matchRule.maxHeight)
 
@@ -77,7 +77,7 @@ proc newWorld*(matchRule: MatchRule, mapVsize: float, aParams, eParams: seq[Mini
 
   
 
-proc update*(self: var World, delta: float) =
+proc update*(self: var World, delta: float32) =
   # deltaってどこで取得すべきなんだ？
   self.attackSystem.update(self.units, delta)
   self.heightSystem.update(self.units, delta)
@@ -118,6 +118,7 @@ proc addPath*(u: var Unit, world: World, toTile: Vector2i) =
 
 proc setPath*(world: var World, pos: Vector2) =
   let toTile = world.map.pos2tile(pos)
+  echo toTile
   if not isExists(world.map, toTile):
     return
   for a in world.units.mitems:

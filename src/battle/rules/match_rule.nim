@@ -6,11 +6,11 @@ type MapMode {.pure.} = enum
   Point, Line, Not
 
 type ParamDef = object
-  min, max: float
+  min, max: float32
   steps: int
   tradeOff: bool
 
-proc newParamDef(min, max: float, steps: int, tradeOff: bool): ParamDef =
+proc newParamDef(min, max: float32, steps: int, tradeOff: bool): ParamDef =
   ParamDef(min: min, max: max, steps: steps, tradeOff: tradeOff)
 
 
@@ -33,18 +33,18 @@ type MatchRule* = object
   mapMode* = MapMode.Point
 
   # system
-  angleMargin* = 0.1
+  angleMargin*: float32 = 0.1
   diff2speed* = newConversion(1, -0.3, 1)
 
-  lMargin* = 0
-  sMargin* = 0
+  lMargin*: float32 = 0
+  sMargin*: float32 = 0
 
-  heightCd* = 10
-  heightActionTimer* = 1
+  heightCd*: float32 = 10
+  heightActionTimer*: float32 = 1
 
-  scoreInterval* = 9
+  scoreInterval*: float32 = 9
   scoreKaisuu* = 3
-  scoreBase* = 10
+  scoreBase*: float32 = 10
   dist2penalty* = newConversion(0, 2, -1)
 
   matchTime* = 60 * 3

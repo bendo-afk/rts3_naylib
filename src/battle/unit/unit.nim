@@ -22,8 +22,8 @@ type Unit* = object
   team*: Team
 
 proc newUnit*(damage: int, traverseSpeed, angleMargin,
-        maxReloadTime, leftReloadTime, turretAngle: float,
-        maxTimer: float, maxHp: int, speed: int, height: float, pos: Vector2): Unit =
+        maxReloadTime, leftReloadTime, turretAngle: float32,
+        maxTimer: float32, maxHp: int, speed: int, height: float32, pos: Vector2): Unit =
   result.attack = newAttackComp(damage, traverseSpeed, angleMargin,
         maxReloadTime, leftReloadTime, turretAngle)
   result.heightAction = newHeightActionComp(maxTimer)

@@ -8,7 +8,7 @@ proc newAttackSystem*(): AttackSystem =
   # AttackSystem(units: units)
   AttackSystem()
 
-proc update*(self: AttackSystem, units: var seq[Unit], delta: float) =
+proc update*(self: AttackSystem, units: var seq[Unit], delta: float32) =
   for u in units.mitems:
     if u.isDead(): continue
 
@@ -25,8 +25,8 @@ proc update*(self: AttackSystem, units: var seq[Unit], delta: float) =
           targetEnemyId = v.id
           break
 
-        let targetAngle = diffVec.angle()
-        let angleDiff = abs(angleDifference(targetAngle, u.attack.turretAngle))
+        let targetAngle: float32 = diffVec.angle()
+        let angleDiff: float32 = abs(angleDifference(targetAngle, u.attack.turretAngle))
 
         if angleDiff < minAngleDiff:
           minAngleDiff = angleDiff

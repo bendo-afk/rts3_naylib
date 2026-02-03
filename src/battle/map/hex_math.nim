@@ -44,7 +44,7 @@ proc axialRound(x, y: float32): Vector2i =
     xgrid = round(x)
     ygrid = round(y)
     a = x - xgrid
-    b = x - ygrid
+    b = y - ygrid
   if abs(a) >= abs(b):
     return Vector2i(x: int(xgrid + round(a + 0.5 * b)), y: int(ygrid))
   else:

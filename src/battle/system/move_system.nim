@@ -20,7 +20,7 @@ proc setMultiplier*(moveSys: MoveSystem, mComp: var MoveComp) =
     h1 = moveSys.map.get_height(t1)
     h2 = moveSys.map.get_height(t2)
     diff = h2 - h1
-  mComp.multiplier = moveSys.diff2speed.calc(diff.float)
+  mComp.multiplier = moveSys.diff2speed.calc(diff.float32)
   
 
 proc update*(moveSys: MoveSystem, units: var seq[Unit], delta: float32) =

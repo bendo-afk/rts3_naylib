@@ -8,11 +8,11 @@ const InvalidTile = Vector2i(x: int.low, y: int.low)
 
 type VisionSystem* = object
   map: TileMap
-  lMargin, sMargin: float
+  lMargin, sMargin: float32
 
 
-proc newVisionSystem*(map: TileMap, lMargin, sMargin: float): VisionSystem =
-  VisionSystem(map: map, lMargin: lMargin, sMargin: sMargin,)
+proc newVisionSystem*(map: TileMap, lMargin, sMargin: float32): VisionSystem =
+  VisionSystem(map: map, lMargin: lMargin, sMargin: sMargin)
 
 
 proc firstStep*(map: TileMap, last1, last2, cur1, cur2: var Vector2i, pos1, pos2: Vector2) =
@@ -107,11 +107,11 @@ proc isVisible*(visionSystem: VisionSystem, from_pos, to_pos: Vector2, unit_heig
     return visVisible
 
   let
-    height1 = unit_height1 + map.getHeight(from_tile).float
-    height2 = unit_height2 + map.getHeight(to_tile).float
-    slope = (height2 - height1) / calc_dist(from_tile, to_tile).float
+    height1: float32 = unit_height1 + map.getHeight(from_tile).float32
+    height2: float32 = unit_height2 + map.getHeight(to_tile).float32
+    slope: float32 = (height2 - height1) / calc_dist(from_tile, to_tile).float32
   
-  var min_margin = system.Inf
+  var min_margin: float32 = system.Inf
 
   var last1, last2, cur1, cur2, next1, next2 = InvalidTile
   
@@ -127,7 +127,7 @@ proc isVisible*(visionSystem: VisionSystem, from_pos, to_pos: Vector2, unit_heig
       let
         t_height = map.getHeight(t)
         t_dist = calc_dist(from_tile, t)
-        t_margin = (slope * t_dist.float) + height1 - t_height.float
+        t_margin: float32 = (slope * t_dist.float32) + height1 - t_height.float32
       if t_margin < min_margin:
         if t_margin < visionSystem.lMargin:
           return visNot
