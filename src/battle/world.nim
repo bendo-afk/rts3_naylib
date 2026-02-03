@@ -31,6 +31,8 @@ type World* = object
 
   dragBox*: DragBox
 
+  leftMatchTime: float
+
 
 
 proc newUnit(mr: MatchRule, params: MinimalParams, pos: Vector2): Unit =
@@ -72,6 +74,7 @@ proc newWorld*(matchRule: MatchRule, mapVsize: float, aParams, eParams: seq[Mini
   result.heightSystem = newHeightSystem(result.map, matchRule.heightCd)
   result.scoreSystem = newScoreSystem(matchRule.scoreInterval, matchRule.scoreKaisuu, matchRule.scoreBase, matchRule.dist2penalty)
   result.dragBox = newDragBox()
+  result.leftMatchTime = matchRule.matchTime
 
   
 
@@ -92,6 +95,10 @@ proc update*(self: var World, delta: float) =
   for i, itc in areTilesChanged:
     if itc.isChanged:
       self.scoreSystem.onTileChanged(itc.tile, i == 0, getTime())
+  
+  self.leftMatchTime -= delta
+  if self.leftMatchTime <= 0:
+    discard
 
 
 
