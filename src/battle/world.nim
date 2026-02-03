@@ -31,7 +31,7 @@ type World* = object
 
   dragBox*: DragBox
 
-  leftMatchTime: float
+  leftMatchTime*: float
 
 
 

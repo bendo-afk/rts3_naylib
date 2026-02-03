@@ -36,3 +36,8 @@ proc draw*(self: WorldUI, world: World, camera: Camera2D) =
 
   self.topUI.draw(world.scoreSystem.aScore, world.scoreSystem.eScore, world.heightSystem.states[0].leftCd, world.heightSystem.states[1].leftCd)
 
+  let
+    leftSeconds = world.leftMatchTime.int
+    minute = leftSeconds div 60
+    second = leftSeconds mod 60
+  drawText($minute & ":" & $second, getScreenWidth() - 50, 5, 23, RayWhite)
