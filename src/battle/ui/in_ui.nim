@@ -1,5 +1,6 @@
 import tables
 import raylib, raymath
+import ../../control
 import ../map/tilemap
 import ../unit/unit
 import ../world
@@ -17,59 +18,56 @@ type
     lineColor = Color(r: 0, g: 127, b: 255, a: 153)
 
 
-
-proc initInUI*(s: UISettings, aUnits, eUnits: seq[Unit]): InUI =
-  result.fontSize = s.inFontSize.int32
-  let
-    names = s.names
-    fontSize = s.inFontSize.int32
-    barSizeX = s.inBarX
-    barRatio = s.inReloadRatio
-    bgColor = s.barBg
-    reloadColor = s.inReloadColor
+proc setupUnits(self: var InUI, s: UISettings, units: seq[Unit], team: Team) =
+  let 
+    barColor = if team == Team.Ally: s.allyColor else: s.enemyColor
     brightness = s.DiffBarBright
-  for i, a in aUnits:
-    result.unitsInUI[a.id] = initInUnitUI(
-        a, names[i], fontSize, barSizeX, barRatio, bgColor, s.allyColor,
-        reloadColor, s.allyColor.colorBrightness(brightness)
-    )
-  for i, e in eUnits:
-    result.unitsInUI[e.id] = initInUnitUI(
-        e, names[i], fontSize, barSizeX, barRatio, bgColor, s.enemyColor,
-        reloadColor, s.enemyColor.colorBrightness(brightness)
-    )
-  for n in names:
-    result.maxNameWidth = max(result.maxNameWidth, measureText(n, fontSize))
+    hpColorDiff = barColor.colorBrightness(brightness)
   
+  var idx = 0
+  for u in units:
+    if u.team != team: continue
+    self.unitsInUI[u.id] = initInUnitUI(
+      u, s.names[idx], self.fontSize, s.inBarX, s.inReloadRatio, 
+      s.barBg, barColor, s.inReloadColor, hpColorDiff
+    )
+    inc idx
+
+
+proc initInUI*(s: UISettings, units: seq[Unit]): InUI =
+  result.fontSize = s.inFontSize.int32
   result.unitSize = 10
   result.boxColor = Color(r: 0, g: 178, b: 255, a: 76)
   result.lineColor = Color(r: 0, g: 127, b: 255, a: 153)
-
-
-proc update*(self: var InUI, aUnits, eUnits: seq[Unit], delta: float32) =
-  for a in aUnits:
-    self.unitsInUI[a.id].update(a.hp.hp.float32, a.attack.leftReloadTime.float32, delta)
-  for e in eUnits:
-    self.unitsInUI[e.id].update(e.hp.hp.float32, e.attack.leftReloadTime.float32, delta)
-
-
-
-proc drawWorld*(world: World, camera: Camera2D, unitSize: int, boxColor, lineColor: Color) =
-  mode2D(camera):
-    world.map.draw_map()
-    for a in world.aUnits:
-      drawCircle(a.move.pos, unitSize.float32, Blue)
-      drawLine(a.move.pos, a.move.pos + Vector2(x: 1000 * cos(a.attack.turretAngle), y: 1000 * sin(a.attack.turretAngle)), 2, RayWhite)
     
-    for e in world.eUnits:
-      if e.vision.visibleState == visVisible:
-        drawCircle(e.move.pos, unitSize.float32, Red)
-        drawLine(e.move.pos, e.move.pos + Vector2(x: 1000 * cos(e.attack.turretAngle), y: 1000 * sin(e.attack.turretAngle)), 2, RayWhite)
-    
-    if world.dragBox.dragging:
-      drawRectangle(world.dragBox.rect, boxColor)
-      drawRectangleLines(world.dragBox.rect, 2 / camera.zoom,lineColor)
+  result.setupUnits(s, units, Team.Ally)
+  result.setupUnits(s, units, Team.Enemy)
+  for n in s.names:
+    result.maxNameWidth = max(result.maxNameWidth, measureText(n, result.fontSize))
+  
 
+
+proc update*(self: var InUI, units: seq[Unit], delta: float32) =
+  for u in units:
+    self.unitsInUI[u.id].update(u.hp.hp.float32, u.attack.leftReloadTime.float32, delta)
+
+    
+
+proc drawUnits(units: seq[Unit], unitSize: float32) =
+  for u in units:
+    let isEnemy = u.team == Team.Enemy
+    if isEnemy and u.vision.visibleState != visVisible: continue
+    
+    let color = if isEnemy: Red else: Blue
+    drawCircle(u.move.pos, unitSize.float32, color)
+    let lineEnd = u.move.pos + Vector2(x: 1000 * cos(u.attack.turretAngle), y: 1000 * sin(u.attack.turretAngle))
+    drawLine(u.move.pos, lineEnd, 2, RayWhite)
+
+
+proc drawDragBox(dragBox: DragBox, camera: Camera2D, boxColor, lineColor: Color) =
+  if dragBox.dragging:
+    drawRectangle(dragBox.rect, boxColor)
+    drawRectangleLines(dragBox.rect, 2 / camera.zoom,lineColor)
 
 
 proc toKey(pos: Vector2): Vector2 =
@@ -77,21 +75,19 @@ proc toKey(pos: Vector2): Vector2 =
 
 
 proc draw*(self: InUI, world: World, camera: Camera2D) =
-  world.drawWorld(camera, self.unitSize, self.boxColor, self.lineColor)
-  
+  mode2D(camera):
+    world.map.draw_map()
+    world.dragBox.drawDragBox(camera, self.boxColor, self.lineColor)
+    drawUnits(world.units, self.unitSize)
 
   var groups: Table[Vector2, seq[int]]
 
-  let allUnits = world.aUnits & world.eUnits
-
-  for u in allUnits:
-    if u in world.eUnits and u.vision.visibleState != visVisible:
+  for u in world.units:
+    if u.team == Team.Enemy and u.vision.visibleState != visVisible:
       continue
 
     let key = u.move.pos.toKey()
-    if not groups.hasKey(key):
-      groups[key] = @[]
-    groups[key].add(u.id)
+    groups.mgetOrPut(key, @[]).add(u.id)
 
   let stackOffset = self.fontSize.float32
   for key, ids in groups:

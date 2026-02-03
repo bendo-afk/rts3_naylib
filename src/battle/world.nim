@@ -23,7 +23,7 @@ type World* = object
   matchRule: MatchRule
 
   map*: TileMap
-  units: seq[Unit]
+  units*: seq[Unit]
 
   attackSystem: AttackSystem
   heightSystem*: HeightSystem

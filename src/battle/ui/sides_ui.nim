@@ -10,46 +10,70 @@ type
     enemyColWidths: seq[int32]
 
 
+proc getUnitTexts(s: UISettings, units: seq[Unit], team: Team): seq[seq[string]] =
+  var idx = 0
+  for u in units:
+    if u.team != team: continue
+    result.add(@[s.names[idx], $u.attack.damage, $u.move.speed, $u.vision.height])
+    inc idx
+
+
+proc createSideUIs(s: UISettings, units: seq[Unit], team: Team, texts: seq[seq[string]]): seq[SideUnitUI] =
+  let fontSize = s.sideFontSize.int32
+  let isAlly = team == Team.Ally
+  
+  let startX = if isAlly: s.sideSideMargin.float32 
+      else: getScreenWidth().float32 - s.sideSideMargin
+  let barWidth = if isAlly: s.sideBarX else: -s.sideBarX
+  let barColor = if isAlly: s.allyColor else: s.enemyColor
+  
+  var pos = Vector2(x: startX, y: s.sideTopMargin)
+  let barSize = Vector2(x: barWidth, y: s.sideFontSize)
+  
+  var textIdx = 0
+  for u in units:
+    if u.team != team: continue
+    
+    let bar = initDiffHpBar(barSize, 0'f32, u.hp.maxHp.float32, s.barBg, barColor, 1'f32, barColor.colorBrightness(s.DiffBarBright))
+    result.add(initSideUnitUI(pos, bar, texts[textIdx], fontSize))
+    
+    pos.y += s.sideFontSize + 10
+    inc textIdx
+
+
 proc initSideUI*(s: UISettings, units: seq[Unit]): SideUI =
   let fontSize = s.sideFontSize.int32
   
-  var allyTexts: seq[seq[string]]
-  for a in units:
-    if a.team != Team.Ally: continue
-    allyTexts.add(@[s.names[i], $a.attack.damage, $a.move.speed, $a.vision.height])
+  var allyTexts = getUnitTexts(s, units, Team.Ally)
   result.allyColWidths = getColWidths(allyTexts, fontSize)
-  
-  var aPos = Vector2(x: s.sideSideMargin.float32, y: s.sideTopMargin)
-  var barSize = Vector2(x: s.sideBarX, y: s.sideFontSize)
-  for i, a in aUnits:
-    let bar = initDiffHpBar(barSize, 0'f32, a.hp.maxHp.float32, s.barBg, s.allyColor, 1'f32, s.allyColor.colorBrightness(s.DiffBarBright))
-    result.allySideUIs.add(initSideUnitUI(aPos, bar, allyTexts[i], fontSize))
-    aPos.y += s.sideFontSize + 10
+  result.allySideUIs = createSideUIs(s, units, Team.Ally, allyTexts)
 
-  var enemyTexts: seq[seq[string]]
-  for i in 0..<eUnits.len:
-    enemyTexts.add(@[s.names[i], $eUnits[i].attack.damage, $eUnits[i].move.speed, $eUnits[i].vision.height])
+  var enemyTexts = getUnitTexts(s, units, Team.Enemy)
   result.enemyColWidths = getColWidths(enemyTexts, fontSize)
-
-  var ePos = Vector2(x: getScreenWidth().float32 - s.sideSideMargin, y: s.sideTopMargin)
-  barSize = Vector2(x: -s.sideBarX, y: s.sideFontSize)
-  for i, e in eUnits:
-    let bar = initDiffHpBar(barSize, 0'f32, e.hp.maxHp.float32, s.barBg, s.enemyColor, 1'f32, s.enemyColor.colorBrightness(s.DiffBarBright))
-    result.enemySideUIs.add(initSideUnitUI(ePos, bar, enemyTexts[i], fontSize))
-    ePos.y += s.sideFontSize + 10
+  result.enemySideUIs = createSideUIs(s, units, Team.Enemy, enemyTexts)
 
 
-proc update*(self: var SideUI, aUnits, eUnits: seq[Unit], delta: float32) =
-  for i, a in aUnits:
-    self.allySideUIs[i].bar.updateDiffHpBar(a.hp.hp.float32, delta)
-  for i, e in eUnits:
-    self.enemySideUIs[i].bar.updateDiffHpBar(e.hp.hp.float32, delta)
+proc update*(self: var SideUI, units: seq[Unit], delta: float32) =
+  var
+    aIdx = 0
+    eIdx = 0
+  for u in units:
+    if u.team == Team.Ally:
+      self.allySideUIs[aIdx].bar.updateDiffHpBar(u.hp.hp.float32, delta)
+      inc aIdx
+    else:
+      self.enemySideUIs[eIdx].bar.updateDiffHpBar(u.hp.hp.float32, delta)
+      inc eIdx
 
 
-proc draw*(self: SIdeUI, aUnits, eUnits: seq[Unit], fontSize: int32, padding: float32) =
-  for i, u in self.allySideUIs:
-    let unit = aUnits[i]
-    u.draw(self.allyColWidths, fontSize, padding, true, unit.attack.leftReloadTime, unit.attack.maxReloadTime)
-  for i, u in self.enemySideUIs:
-    let unit = eUnits[i]
-    u.draw(self.enemyColWidths, fontSize, padding, false, unit.attack.leftReloadTime, unit.attack.maxReloadTime)
+proc draw*(self: SIdeUI, units: seq[Unit], fontSize: int32, padding: float32) =
+  var
+    aIdx = 0
+    eIdx = 0
+  for u in units:
+    if u.team == Team.Ally:
+      self.allySideUIs[aIdx].draw(self.allyColWidths, fontSize, padding, true, u.attack.leftReloadTime, u.attack.maxReloadTime)
+      inc aIdx
+    else:
+      self.enemySideUIs[eIdx].draw(self.enemyColWidths, fontSize, padding, false, u.attack.leftReloadTime, u.attack.maxReloadTime)
+      inc eIdx
