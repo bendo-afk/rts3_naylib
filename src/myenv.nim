@@ -46,3 +46,6 @@ proc setAction(unitId: int, isAlly: bool, moveOrHeight: int, rotateAction: int) 
     targetAngle = u.attack.turretAngle
   let relPos = Vector2(x: cos(targetAngle), y: sin(targetAngle))
   u.attack.targetPos = relPos + u.move.pos
+
+proc getObs(unitId: int) =
+  

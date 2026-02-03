@@ -34,13 +34,13 @@ proc cost*(grid: Grid, a, b: Vector2i): float =
     hA = grid.heights[tile2index(grid.maxX, a)]
     hB = grid.heights[tile2index(grid.maxX, b)]
     diff = hB - hA
-    speed = diff2speed.calc(diff.float)
+    speed: float32 = diff2speed.calc(diff.float32)
   return 1 / speed
 
 
 proc heuristic*(grid: Grid, next, goal: Vector2i): float =
   let
     dist = calcDist(next, goal)
-    maxSpeed = diff2speed.calc(-grid.maxHeight.float)
-  return dist.float / maxSpeed
+    maxSpeed: float32 = diff2speed.calc(-grid.maxHeight.float32)
+  return dist.float32 / maxSpeed
 

@@ -30,25 +30,25 @@ proc getAdjacentTile*(tile: Vector2i, index: int): Vector2i =
     return tile + evenOffsets[index]
 
 
-proc tile2pos*(vsize: float, tile: Vector2i): Vector2 =
+proc tile2pos*(vsize: float32, tile: Vector2i): Vector2 =
   var
-    x = sqrt(float(3)) * (float(tile.x) + 0.5 * float(tile.y and 1))
-    y = 3 / 2 * float(tile.y)
+    x: float32 = sqrt(float32(3)) * (float32(tile.x) + 0.5 * float32(tile.y and 1))
+    y: float32 = 3 / 2 * float32(tile.y)
   x = x * vsize
   y = y * vsize
   return Vector2(x: x, y: y)
 
 
-proc axialRound(x, y: var float): Vector2i =
+proc axialRound(x, y: float32): Vector2i =
   let
     xgrid = round(x)
     ygrid = round(y)
-  x -= xgrid
-  y -= ygrid
-  if abs(x) >= abs(y):
-    return Vector2i(x: int(xgrid + round(x + 0.5 * y)), y: int(ygrid))
+    a = x - xgrid
+    b = x - ygrid
+  if abs(a) >= abs(b):
+    return Vector2i(x: int(xgrid + round(a + 0.5 * b)), y: int(ygrid))
   else:
-    return Vector2i(x: int(xgrid), y: int(ygrid + round(y + 0.5 * x)))
+    return Vector2i(x: int(xgrid), y: int(ygrid + round(b + 0.5 * a)))
 
 
 proc axial2oddr(tile: Vector2i): Vector2i =
@@ -59,13 +59,12 @@ proc axial2oddr(tile: Vector2i): Vector2i =
   return Vector2i(x: x, y: y)
 
 
-proc pos2tile*(vsize: float, pos: Vector2): Vector2i =
+proc pos2tile*(vsize: float32, pos: Vector2): Vector2i =
   let
     x = pos.x / vsize
     y = pos.y / vsize
-  var
-    q = (sqrt(float(3)) / 3 * x - 1 / 3 * y)
-    r = 2 / 3 * y
+    q: float32 = (sqrt(float32(3)) / 3 * x - 1 / 3 * y)
+    r: float32 = 2 / 3 * y
   return axial2oddr(axialRound(q, r))
 
 
@@ -98,10 +97,10 @@ proc isExists*(maxX, maxY: int, tile: Vector2i): bool =
     tile.x >= 0 and tile.x <= maxX
 
 
-proc getHexVertices*(vsize: float): array[6, Vector2] =
+proc getHexVertices*(vsize: float32): array[6, Vector2] =
   let
-    hsize = sqrt(3.0) / 2 * vsize
-    half_vsize = vsize / 2
+    hsize: float32 = sqrt(3.0) / 2 * vsize
+    half_vsize: float32 = vsize / 2
   result = [
     Vector2(x: 0, y: -vsize),
     Vector2(x: hsize, y: -half_vsize),

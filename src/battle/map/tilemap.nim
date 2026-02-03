@@ -18,7 +18,7 @@ const MAX_GREEN = Color(r: 0, g: 255, b: 0, a: 255)
 
 
 type TileMap* = ref object
-  vsize*: float
+  vsize*: float32
   maxX, maxY: int
   maxHeight: int
   vertices: array[6, Vector2]
@@ -32,7 +32,7 @@ type TileMap* = ref object
 
 
 
-proc getAllCenterPos(vsize: float, max_x, max_y: int): seq[Vector2] =
+proc getAllCenterPos(vsize: float32, max_x, max_y: int): seq[Vector2] =
   for y in 0..max_y:
     for x in 0..max_x:
       result.add(tile2pos(vsize, Vector2i(x: x, y: y)))
@@ -51,7 +51,7 @@ proc generateMap(map: var TileMap) =
       # map.heights[tile2index(map.max_x, Vector2i(x: x, y: y))] = 1
 
 
-proc newTileMap*(vsize: float, max_x, max_y, max_height: int): TileMap =
+proc newTileMap*(vsize: float32, max_x, max_y, max_height: int): TileMap =
   var map = TileMap(
     vsize: vsize,
     max_x: max_x, max_y: max_y, max_height: max_height
