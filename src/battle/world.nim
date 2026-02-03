@@ -100,7 +100,7 @@ proc update*(self: var World, delta: float) =
     discard
 
 
-proc addPath(u: var Unit, world: World, toTile: Vector2i) =
+proc addPath*(u: var Unit, world: World, toTile: Vector2i) =
     if u.move.movingWeight != 0:
       let
         addedPath2i = world.map.calcPath(world.map.pos2tile(u.move.path[1]), toTile)

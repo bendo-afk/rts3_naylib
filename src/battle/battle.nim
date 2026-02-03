@@ -24,8 +24,8 @@ proc newBattle*(width, height: float32): Battle =
   
   result.worldUI = initWorldUI(result.world)
   
-  for u in result.world.units:
-    echo u.id
+  # for u in result.world.units:
+  #   echo u.id
 
 
 proc handleInputs(battle: var Battle) =
