@@ -1,3 +1,4 @@
+import strutils
 import raylib
 import ui_settings, sides_ui, top_ui, in_ui
 import ../world
@@ -38,6 +39,7 @@ proc draw*(self: WorldUI, world: World, camera: Camera2D) =
 
   let
     leftSeconds = world.leftMatchTime.int
-    minute = leftSeconds div 60
-    second = leftSeconds mod 60
-  drawText($minute & ":" & $second, getScreenWidth() - 50, 5, 23, RayWhite)
+    m = leftSeconds div 60
+    s = leftSeconds mod 60
+    text = "$#:$#".format(m, s.intToStr(2))
+  drawText(text, getScreenWidth() - 50, 5, 23, RayWhite)
