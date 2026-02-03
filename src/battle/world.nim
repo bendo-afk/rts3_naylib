@@ -118,7 +118,6 @@ proc addPath*(u: var Unit, world: World, toTile: Vector2i) =
 
 proc setPath*(world: var World, pos: Vector2) =
   let toTile = world.map.pos2tile(pos)
-  echo toTile
   if not isExists(world.map, toTile):
     return
   for a in world.units.mitems:

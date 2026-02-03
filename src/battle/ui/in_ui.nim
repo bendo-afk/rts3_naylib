@@ -58,10 +58,13 @@ proc drawUnits(units: seq[Unit], unitSize: float32) =
   for u in units:
     if u.isDead: continue
     let isEnemy = u.team == Team.Enemy
-    if isEnemy and u.vision.visibleState != visVisible: continue
+    if isEnemy and u.vision.visibleState != visVisible:
+      if u.vision.lastPosition == Vector2(x: -Inf, y: -Inf): continue
+      drawCircle(u.vision.lastPosition, unitSize, RayWhite.colorBrightness(0.5))
+      continue
     
     let color = if isEnemy: Red else: Blue
-    drawCircle(u.move.pos, unitSize.float32, color)
+    drawCircle(u.move.pos, unitSize, color)
     let lineEnd = u.move.pos + Vector2(x: 1000 * cos(u.attack.turretAngle), y: 1000 * sin(u.attack.turretAngle))
     drawLine(u.move.pos, lineEnd, 2, RayWhite)
 

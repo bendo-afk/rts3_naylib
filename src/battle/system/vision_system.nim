@@ -173,4 +173,7 @@ proc update*(self: var VisionSystem, units: var seq[Unit]) =
       if visState == visVisible:
         a.visibleEnemyIds.add(b.id)
         b.visibleEnemyIds.add(a.id)
-      
+  
+  for u in units.mitems:
+    if u.vision.visibleState == visVisible:
+      u.vision.lastPosition = u.move.pos
