@@ -58,7 +58,6 @@ proc newWorld*(matchRule: MatchRule, mapVsize: float, aParams, eParams: seq[Mini
     var u = newUnit(matchRule, p, aPos)
     u.team = Team.Ally
     u.id = result.units.len
-    echo u.id
     result.units.add(u)
 
   let ePos = result.map.tile2pos(Vector2i(x: matchRule.maxX, y: matchRule.maxY))
@@ -101,6 +100,21 @@ proc update*(self: var World, delta: float) =
     discard
 
 
+proc addPath(u: var Unit, world: World, toTile: Vector2i) =
+    if u.move.movingWeight != 0:
+      let
+        addedPath2i = world.map.calcPath(world.map.pos2tile(u.move.path[1]), toTile)
+        addedPath2 = addedPath2i.mapIt(world.map.tile2pos(it))
+      u.move.path.setLen(1)
+      u.move.path.add(addedPath2)
+    else:
+      let
+        fromTile = world.map.pos2tile(u.move.pos)
+        addedPath2i = world.map.calcPath(fromTile, toTile)
+        addedPath2 = addedPath2i.mapIt(world.map.tile2pos(it))
+      u.move.path = addedPath2
+      world.moveSystem.setMultiplier(u.move)
+
 
 proc setPath*(world: var World, pos: Vector2) =
   let toTile = world.map.pos2tile(pos)
@@ -110,19 +124,7 @@ proc setPath*(world: var World, pos: Vector2) =
     if a.team != Ally: continue
     if not a.isSelected:
       continue
-    if a.move.movingWeight != 0:
-      let
-        addedPath2i = world.map.calcPath(world.map.pos2tile(a.move.path[1]), toTile)
-        addedPath2 = addedPath2i.mapIt(world.map.tile2pos(it))
-      a.move.path.setLen(1)
-      a.move.path.add(addedPath2)
-    else:
-      let
-        fromTile = world.map.pos2tile(a.move.pos)
-        addedPath2i = world.map.calcPath(fromTile, toTile)
-        addedPath2 = addedPath2i.mapIt(world.map.tile2pos(it))
-      a.move.path = addedPath2
-      world.moveSystem.setMultiplier(a.move)
+    addPath(a, world, toTile)
 
 
 proc selectByBox*(world: var World, rect: Rectangle) =
