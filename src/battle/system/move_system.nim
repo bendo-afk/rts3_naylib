@@ -29,6 +29,6 @@ proc update*(moveSys: MoveSystem, units: var seq[Unit], delta: float32) =
       continue
     u.move.movePos2Pos(delta)
     if u.move.movingWeight == 1:
-      u.move.path.delete(0)
       u.move.movingWeight = 0
+      u.move.path.delete(0)
       setMultiplier(moveSys, u.move)

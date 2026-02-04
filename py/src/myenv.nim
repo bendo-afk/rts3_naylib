@@ -5,9 +5,17 @@ import ../../src/battle/map/[hex_math, tilemap]
 import ../../src/battle/unit/unit
 import ../../src/battle/system/height_system
 import ../../src/battle/rules/match_rule as mr
+import ../../src/battle/ui/world_ui as wu
+import ../../src/camera as cam
 
 
 var worldEnv: World
+var camera: Camera2D
+var worldUi: WorldUI
+
+const
+  width = 900
+  height = 800
 
 const
   Delta = 1 / 60
@@ -25,11 +33,23 @@ var matchRule: MatchRule
 var oldScores: array[Team, float32] = [0, 0]
 var rewards: array[Team, float32] = [0, 0]
 
-proc initEnv(aParamsArg, eParamsArg: seq[MinimalParams]) {.exportpy.} =
+
+proc initEnv(aParamsArg, eParamsArg: seq[MinimalParams], renderMode: bool) {.exportpy.} =
   matchRule = MatchRule()
+  matchRule.maxX = maxX
+  matchRule.maxY = maxY
+  matchRule.maxHeight = maxHeight
+
+  matchRule.heightCd = 4
+  matchRule.scoreInterval = 5
+  matchRule.scoreKaisuu = 3
   aParams = aParamsArg
   eParams = eParamsArg
 
+  if renderMode:
+    initWindow(width, height, "training")
+    camera = Camera2D(zoom: 1, target: Vector2(x: -100, y: -100), offset: Vector2(x: width / 2, y: height / 2))
+    worldUI = initWorldUI(worldEnv)
 
 
 proc reset() {.exportpy.} =
@@ -242,6 +262,25 @@ proc step() {.exportpy.} =
 
     oldScores[t] = worldEnv.scoreSystem.scores[t]
 
+
+proc isTerminated(): bool {.exportpy.} =
+  return worldEnv.leftMatchTime <= 0
+
+
 proc getReward(unitId: int): float32 {.exportpy.} =
   let team = worldEnv.units[unitId].team
   return rewards[team]
+
+
+proc draw() {.exportpy.} =
+  dragCamera(camera)
+  zoomCamera(camera)
+
+  beginDrawing()
+  clearBackground(Brown)
+
+  worldUI.draw(worldEnv, camera)
+
+  drawFPS(1, 1)
+
+  endDrawing()
