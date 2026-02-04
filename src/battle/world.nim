@@ -78,7 +78,6 @@ proc newWorld*(matchRule: MatchRule, mapVsize: float32, aParams, eParams: seq[Mi
   
 
 proc update*(self: var World, delta: float32) =
-  # deltaってどこで取得すべきなんだ？
   self.attackSystem.update(self.units, delta)
   self.heightSystem.update(self.units, delta)
   self.moveSystem.update(self.units, delta)

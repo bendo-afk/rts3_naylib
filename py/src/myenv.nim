@@ -4,12 +4,13 @@ import ../../src/battle/world
 import ../../src/battle/map/[hex_math, tilemap]
 import ../../src/battle/unit/unit
 import ../../src/battle/system/height_system
-import ../../src/battle/rules/match_rule
+import ../../src/battle/rules/match_rule as mr
 
 
 var worldEnv: World
 
 const
+  Delta = 1 / 60
   Vsize = 100
   maxX: int = 19
   maxY: int = 19
@@ -18,20 +19,33 @@ const
   maxPosX = tile2pos(Vsize, Vector2i(x: maxX, y: 1)).x
   # maxPosY = tile2pos(Vsize, Vector2i(x: 0, y: maxY)).y
 
+var aParams, eParams: seq[MinimalParams]
+var matchRule: MatchRule
 
-proc initEnv(aParams, eParams: seq[MinimalParams]) {.exportpy.} =
-  var mRule = MatchRule()
+var oldScores: array[Team, float32] = [0, 0]
+var rewards: array[Team, float32] = [0, 0]
 
-  worldEnv = newWorld(mRule, Vsize, aParams, eParams)
+proc initEnv(aParamsArg, eParamsArg: seq[MinimalParams]) {.exportpy.} =
+  matchRule = MatchRule()
+  aParams = aParamsArg
+  eParams = eParamsArg
 
 
-proc setAction(unitId: int, isAlly: bool, moveOrHeight: int, rotateAction: int) {.exportpy.} =
-  var u = worldEnv.units[unitId]
+
+proc reset() {.exportpy.} =
+  worldEnv = newWorld(matchRule, Vsize, aParams, eParams)
+  oldScores = [0, 0]
+  rewards = [0, 0]
+
+
+proc setAction(unitId: int, moveOrHeight: int, rotateAction: int) {.exportpy.} =
+  var u = addr worldEnv.units[unitId]
+  let team = u.team
   let curTile = worldEnv.map.pos2tile(u.move.pos)
   case moveOrHeight:
     of 0..5:
       let targetTile = getAdjacentTile(curTile, moveOrHeight)
-      addPath(u, worldEnv, targetTile)
+      addPath(u[], worldEnv, targetTile)
     of 6:
       discard
     of 7..13:
@@ -40,14 +54,14 @@ proc setAction(unitId: int, isAlly: bool, moveOrHeight: int, rotateAction: int) 
         targetTile = curTile
       else:
         targetTile = getAdjacentTile(curTile, moveOrHeight - 7)
-      worldEnv.heightSystem.tryStart(u, isAlly, targetTile, true)
+      worldEnv.heightSystem.tryStart(u[], team, targetTile, true)
     of 14..20:
       var targetTile: Vector2i
       if moveOrHeight == 20:
         targetTile = curTile
       else:
         targetTile = getAdjacentTile(curTile, moveOrHeight - 14)
-      worldEnv.heightSystem.tryStart(u, isAlly, targetTile, false)
+      worldEnv.heightSystem.tryStart(u[], team, targetTile, false)
     else:
       discard
   
@@ -62,6 +76,36 @@ proc setAction(unitId: int, isAlly: bool, moveOrHeight: int, rotateAction: int) 
     targetAngle = u.attack.turretAngle
   let relPos = Vector2(x: cos(targetAngle), y: sin(targetAngle))
   u.attack.targetPos = relPos + u.move.pos
+
+
+proc isMovable(unitId: int, moveAction: int): bool {.exportpy.} =
+  let
+    curTile = worldEnv.map.pos2tile(worldEnv.units[unitId].move.pos)
+    nextTile = getAdjacentTile(curTile, moveAction)
+  return worldEnv.map.isExists(nextTile) and worldEnv.map.isMovable(curTile, nextTile)
+
+
+proc isChangeable(unitId, hAct: int): bool {.exportpy.} =
+  let team = worldEnv.units[unitId].team
+  if not worldEnv.heightSystem.canStartAction(team):
+    return false
+
+  let isRaise = hAct <= 13
+  var targetIdx = if isRaise: hAct - 7 else: hAct - 14
+  let curTile = worldEnv.map.pos2tile(worldEnv.units[unitId].move.pos)
+  let targetTile = if targetIdx == 6: curTile else: getAdjacentTile(curTile, targetIdx)
+  
+  return worldEnv.map.isExists(targetTile) and
+      worldEnv.map.isMovable(curTile, targetTile) and
+      worldEnv.map.canChangeHeight(targetTile, isRaise)
+
+
+proc getActionMask(unitId: int): array[21, bool] {.exportpy.} =
+  for i in 0..5:
+    result[i] = isMovable(unitId, i)
+  result[6] = true
+  for i in 7..20:
+    result[i] = isChangeable(unitId, i)
 
 
 proc fillUnitObs(u: Unit, pos: Vector2): array[14, float32] =
@@ -166,18 +210,18 @@ proc getObsScoreMap(isAlly: bool): array[4, array[maxX + 1, array[maxY + 1, floa
   # result[3]: 敵の残り時間 (正規化)
   let ss = worldEnv.scoreSystem
   
-  # 回数と時間の正規化用定数（0除算防止）
   let maxCount: float32 = 5
   let maxInterval: float32 = 30
 
-  # 味方のタイル情報をマップに書き込み
-  for t in ss.allyTiles:
+  let
+    myTeam = if isAlly: Team.Ally else: Team.Enemy
+    oppTeam = if isAlly: Team.Enemy else: Team.Ally
+  for t in ss.effTiles[myTeam]:
     if t.tile.x in 0..maxX and t.tile.y in 0..maxY:
       result[0][t.tile.x][t.tile.y] = t.leftCount.float32 / maxCount
       result[1][t.tile.x][t.tile.y] = t.leftTime / maxInterval
 
-  # 敵のタイル情報をマップに書き込み
-  for t in ss.enemyTiles:
+  for t in ss.effTiles[oppTeam]:
     if t.tile.x in 0..maxX and t.tile.y in 0..maxY:
       result[2][t.tile.x][t.tile.y] = t.leftCount.float32 / maxCount
       result[3][t.tile.x][t.tile.y] = t.leftTime / maxInterval
@@ -187,5 +231,17 @@ proc getLeftMatchTime(): float32 {.exportpy.} =
   worldEnv.leftMatchTime
 
 
-proc getReward(unitId: int): float32 {.exportpy.} =
+proc step() {.exportpy.} =
+  worldEnv.update(Delta)
   
+  for t in Team:
+    rewards[t] = worldEnv.scoreSystem.scores[t] - oldScores[t]
+    if worldEnv.heightSystem.areChanged[t].isChanged:
+      rewards[t] += 1
+    rewards[t] *= 0.1
+
+    oldScores[t] = worldEnv.scoreSystem.scores[t]
+
+proc getReward(unitId: int): float32 {.exportpy.} =
+  let team = worldEnv.units[unitId].team
+  return rewards[team]

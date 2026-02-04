@@ -5,7 +5,7 @@ type
   # チームごとの進行状態をまとめる
   ActionState = ref object
     leftCd*: float32
-    lockedUnitId: UnitId = -1
+    lockedUnitId*: UnitId = -1
     targetTile: Vector2i
     isRaise: bool
 
@@ -26,7 +26,7 @@ proc newHeightSystem*(map: TileMap, maxCd: float32): HeightSystem =
     result.states[t] = ActionState(leftCd: maxCd)
 
 
-proc canStartAction(self: HeightSystem, team: Team): bool =
+proc canStartAction*(self: HeightSystem, team: Team): bool =
   let state = self.states[team]
   return state.leftCd <= 0 and state.lockedUnitId == -1
 
