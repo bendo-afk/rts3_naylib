@@ -91,9 +91,9 @@ proc update*(self: var World, delta: float32) =
       u.isSelected = false
 
   let areTilesChanged = self.heightSystem.areChanged
-  for i, itc in areTilesChanged:
+  for t, itc in areTilesChanged:
     if itc.isChanged:
-      self.scoreSystem.onTileChanged(itc.tile, i == 0, getTime())
+      self.scoreSystem.onTileChanged(itc.tile, t, getTime())
   
   self.leftMatchTime -= delta
   if self.leftMatchTime <= 0:
@@ -153,4 +153,4 @@ proc changeHeight*(self: var World, pos: Vector2, isRaise: bool) =
     if a.team != Ally: continue
     if not a.isSelected or a.move.movingWeight != 0:
       continue
-    self.heightSystem.tryStart(a, true, tile, isRaise)
+    self.heightSystem.tryStart(a, a.team, tile, isRaise)

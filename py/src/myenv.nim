@@ -185,3 +185,7 @@ proc getObsScoreMap(isAlly: bool): array[4, array[maxX + 1, array[maxY + 1, floa
 
 proc getLeftMatchTime(): float32 {.exportpy.} =
   worldEnv.leftMatchTime
+
+
+proc getReward(unitId: int): float32 {.exportpy.} =
+  

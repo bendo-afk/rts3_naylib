@@ -16,30 +16,26 @@ type
 type HeightSystem* = object
   map: TileMap
   maxCd: float32
-  states*: array[2, ActionState]
-  areChanged*: array[2, IsChanged]
+  states*: array[Team, ActionState]
+  areChanged*: array[Team, IsChanged]
 
 
 proc newHeightSystem*(map: TileMap, maxCd: float32): HeightSystem =
   result = HeightSystem(map: map, maxCd: maxCd)
-  for i in 0 ..< result.states.len:
-    result.states[i] = ActionState(leftCd: maxCd)
+  for t in Team:
+    result.states[t] = ActionState(leftCd: maxCd)
 
 
-# チーム判定用のヘルパー
-template s(self: HeightSystem, isAlly: bool): ActionState =
-  if isAlly: self.states[0] else: self.states[1]
-
-proc canStartAction(self: HeightSystem, isAlly: bool): bool =
-  let state = self.s(isAlly)
+proc canStartAction(self: HeightSystem, team: Team): bool =
+  let state = self.states[team]
   return state.leftCd <= 0 and state.lockedUnitId == -1
 
 
-proc tryStart*(self: var HeightSystem, unit: var Unit, isAlly: bool, tile: Vector2i, isRaise: bool) =
-  if not canStartAction(self, isAlly): return
+proc tryStart*(self: var HeightSystem, unit: var Unit, team: Team, tile: Vector2i, isRaise: bool) =
+  if not canStartAction(self, team): return
 
   unit.heightAction.isChanging = true
-  var state = self.s(isAlly)
+  var state = self.states[team]
   state.lockedUnitId = unit.id
   state.targetTile = tile
   state.isRaise = isRaise  

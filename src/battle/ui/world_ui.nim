@@ -2,6 +2,7 @@ import strutils
 import raylib
 import ui_settings, sides_ui, top_ui, in_ui
 import ../world
+import ../unit/unit
 
 type
   WorldUI* = object
@@ -35,7 +36,7 @@ proc draw*(self: WorldUI, world: World, camera: Camera2D) =
 
   self.sideUI.draw(world.units, fontSize, padding)
 
-  self.topUI.draw(world.scoreSystem.aScore, world.scoreSystem.eScore, world.heightSystem.states[0].leftCd, world.heightSystem.states[1].leftCd)
+  self.topUI.draw(world.scoreSystem.scores[Team.Ally], world.scoreSystem.scores[Team.Enemy], world.heightSystem.states[Team.Ally].leftCd, world.heightSystem.states[Team.Ally].leftCd)
 
   let
     leftSeconds = world.leftMatchTime.int

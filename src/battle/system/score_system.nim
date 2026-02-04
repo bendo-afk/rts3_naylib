@@ -2,6 +2,7 @@ import sequtils
 import ../rules/conversion
 import ../../utils
 import ../map/hex_math
+import ../unit/unit
 
 type EffectiveTile = object
   tile*: Vector2i
@@ -15,12 +16,12 @@ type ScoreSystem* = object
   scoreKaisuu: int
   basePoint: float32
   dist2pena: Conversion
-  allyTiles*, enemyTiles*: seq[EffectiveTile]
-  aScore*, eScore*: float32
+  effTiles*: array[Team, seq[EffectiveTile]]
+  scores*: array[Team, float32]
 
 
 proc newScoreSystem*(scoreInterval: float32, scoreKaisuu: int, basePoint: float32, dist2pena: Conversion): ScoreSystem =
-  ScoreSystem(scoreInterval: scoreInterval, scoreKaisuu: scoreKaisuu, basePoint: basePoint, dist2pena: dist2pena, aScore: 0, eScore: 0)
+  ScoreSystem(scoreInterval: scoreInterval, scoreKaisuu: scoreKaisuu, basePoint: basePoint, dist2pena: dist2pena, scores: [0, 0])
 
 
 proc calcScore(self: ScoreSystem, eTile: EffectiveTile, effTiles: seq[EffectiveTile]): float32 =
@@ -35,33 +36,36 @@ proc calcScore(self: ScoreSystem, eTile: EffectiveTile, effTiles: seq[EffectiveT
   return max(self.basePoint - penalty, 0.0)
 
 
-proc onTileChanged*(self: var ScoreSystem, tile: Vector2i, isAlly: bool, currentFrame: float32) =
+proc onTileChanged*(self: var ScoreSystem, tile: Vector2i, team: Team, currentFrame: float32) =
   let eTile = EffectiveTile(
       tile: tile,
       leftTime: self.scoreInterval,
       leftCount: self.scoreKaisuu,
       createdFrame: currentFrame
   )
-  if isAlly:
-    self.enemyTiles.keepItIf(not (it.tile == tile and it.createdFrame != currentFrame))
-    self.allyTiles.add(eTile)
+  if team == Team.Ally:
+    self.effTiles[Team.Enemy].keepItIf(not (it.tile == tile and it.createdFrame != currentFrame))
+    self.effTiles[Team.Ally].add(eTile)
   else:
-    self.allyTiles.keepItIf(not (it.tile == tile and it.createdFrame != currentFrame))
-    self.enemyTiles.add(eTile)
+    self.effTiles[Team.Ally].keepItIf(not (it.tile == tile and it.createdFrame != currentFrame))
+    self.effTiles[Team.Enemy].add(eTile)
 
 
-proc updateSide(self: ScoreSystem, tiles: var seq[EffectiveTile], score: var float32, delta: float32) =
-  for t in tiles.mitems:
-    t.leftTime -= delta
+proc updateSide(self: var ScoreSystem, delta: float32) =
+  for team in Team:
+    var
+      tiles = self.effTiles[team]
+      score = self.scores[team]
+    for t in tiles.mitems:
+      t.leftTime -= delta
 
-    if t.leftTime <= 0:
-      score += self.calcScore(t, tiles)
-      t.leftTime = self.scoreInterval
-      dec t.leftCount
+      if t.leftTime <= 0:
+        score += self.calcScore(t, tiles)
+        t.leftTime = self.scoreInterval
+        dec t.leftCount
 
-  tiles.keepItIf(it.leftCount > 0)
+    tiles.keepItIf(it.leftCount > 0)
 
 # メインの更新処理
 proc update*(self: var ScoreSystem, delta: float32) =
-  self.updateSide(self.allyTiles, self.aScore, delta)
-  self.updateSide(self.enemyTiles, self.eScore, delta)
+  self.updateSide(delta)

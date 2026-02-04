@@ -13,4 +13,3 @@ proc newVisionComp*(height: float32): VisionComp =
   result.height = height
   result.visibleState = visNot
   result.lastPosition = Vector2(x: -Inf, y: -Inf)
-  VisionComp(height: height, visibleState: visNot)

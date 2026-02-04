@@ -59,7 +59,7 @@ proc drawUnits(units: seq[Unit], unitSize: float32) =
     if u.isDead: continue
     let isEnemy = u.team == Team.Enemy
     if isEnemy and u.vision.visibleState != visVisible:
-      if u.vision.lastPosition == Vector2(x: -Inf, y: -Inf): continue
+      if u.vision.lastPosition.x < -10000: continue
       drawCircle(u.vision.lastPosition, unitSize, RayWhite.colorBrightness(0.5))
       continue
     
