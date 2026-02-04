@@ -5,7 +5,7 @@ import ../../utils
 
 type AttackComp* = object
   damage*: int
-  traverseSpeed: float32
+  traverseSpeed*: float32
   angleMargin*: float32
   maxReloadTime*: float32
   leftReloadTime*: float32

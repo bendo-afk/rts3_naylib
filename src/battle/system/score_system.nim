@@ -4,9 +4,9 @@ import ../../utils
 import ../map/hex_math
 
 type EffectiveTile = object
-  tile: Vector2i
-  leftTime: float32
-  leftCount: int
+  tile*: Vector2i
+  leftTime*: float32
+  leftCount*: int
   createdFrame: float32
 
 
@@ -15,7 +15,7 @@ type ScoreSystem* = object
   scoreKaisuu: int
   basePoint: float32
   dist2pena: Conversion
-  allyTiles, enemyTiles: seq[EffectiveTile]
+  allyTiles*, enemyTiles*: seq[EffectiveTile]
   aScore*, eScore*: float32
 
 
