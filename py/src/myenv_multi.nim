@@ -55,14 +55,13 @@ proc initEnv(aParamsArg, eParamsArg: seq[MinimalParams], renderMode: bool) {.exp
 proc reset() {.exportpy.} =
   worldEnv = newWorld(matchRule, Vsize, aParams, eParams)
   camera = Camera2D(zoom: 1, target: Vector2(x: -100, y: -100), offset: Vector2(x: width / 2, y: height / 2))
-  worldUI = initWorldUI(worldEnv)
+  worldUI = initWorldUI(worldEnv, uiObs)
   oldScores = [0, 0]
   rewards = [0, 0]
 
 
 proc setAction(unitId: int, moveOrHeight: int, rotateAction: int) {.exportpy.} =
   var u = addr worldEnv.units[unitId]
-  let team = u.team
   let curTile = worldEnv.map.pos2tile(u.move.pos)
   case moveOrHeight:
     of 0..5:
@@ -76,14 +75,14 @@ proc setAction(unitId: int, moveOrHeight: int, rotateAction: int) {.exportpy.} =
         targetTile = curTile
       else:
         targetTile = getAdjacentTile(curTile, moveOrHeight - 7)
-      worldEnv.heightSystem.tryStart(u[], team, targetTile, true)
+      worldEnv.heightSystem.tryStart(u[], targetTile, true)
     of 14..20:
       var targetTile: Vector2i
       if moveOrHeight == 20:
         targetTile = curTile
       else:
         targetTile = getAdjacentTile(curTile, moveOrHeight - 14)
-      worldEnv.heightSystem.tryStart(u[], team, targetTile, false)
+      worldEnv.heightSystem.tryStart(u[], targetTile, false)
     else:
       discard
   
@@ -254,8 +253,8 @@ proc step() {.exportpy.} =
   
   for t in Team:
     rewards[t] = worldEnv.scoreSystem.scores[t] - oldScores[t]
-    if worldEnv.heightSystem.areChanged[t].isChanged:
-      rewards[t] += 1
+    # if worldEnv.heightSystem.areChanged[t].isChanged:
+    #   rewards[t] += 1
     rewards[t] *= 0.1
 
     oldScores[t] = worldEnv.scoreSystem.scores[t]
@@ -267,10 +266,12 @@ proc isTerminated(): bool {.exportpy.} =
 
 proc getReward(isAlly: bool): float32 {.exportpy.} =
   let team = if isAlly: Team.Ally else: Team.Enemy
-  return rewards[team]
+  let oppTeam = if isAlly: Team.Enemy else: Team.Ally
+  return rewards[team] - rewards[oppTeam]
 
 
 proc draw() {.exportpy.} =
+  worldUi.update(worldEnv, Delta)
   if not windowShouldClose():
     dragCamera(camera)
     zoomCamera(camera)

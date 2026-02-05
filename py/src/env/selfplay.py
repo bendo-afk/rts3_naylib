@@ -21,14 +21,14 @@ class MyEnv(gym.Env):
 
         aParam = (2, 2, 10, 1, 0)
         aParams = [aParam]
-        myenv.initEnv(aParams, [], render_mode == "human")
+        myenv.initEnv(aParams, [aParam], render_mode == "human")
 
         self.initialized = False
         self.opponent_model = None
         self.model_pool_path = Path("models/")
         self.is_curr_ally = True
         self.n_ally = 1
-        self.n_enemy = 0
+        self.n_enemy = 1
 
     
     def get_observation(self, is_ally):
@@ -77,12 +77,12 @@ class MyEnv(gym.Env):
     def step(self, action):
         self.set_actions(action, True)
 
-        # self.is_curr_ally = False
-        # opp_obs = self.get_observation(False)
-        # masks = self.action_masks()
-        # opp_action, _ = self.opponent_model.predict(opp_obs, deterministic=False, action_masks=masks)
-        # self.set_actions(opp_action, False)
-        # self.is_curr_ally = True
+        self.is_curr_ally = False
+        opp_obs = self.get_observation(False)
+        masks = self.action_masks()
+        opp_action, _ = self.opponent_model.predict(opp_obs, deterministic=False, action_masks=masks)
+        self.set_actions(opp_action, False)
+        self.is_curr_ally = True
 
         myenv.step()
 
