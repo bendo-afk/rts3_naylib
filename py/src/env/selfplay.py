@@ -79,7 +79,8 @@ class MyEnv(gym.Env):
 
         # self.is_curr_ally = False
         # opp_obs = self.get_observation(False)
-        # opp_action, _ = self.opponent_model.predict(opp_obs, deterministic=False)
+        # masks = self.action_masks()
+        # opp_action, _ = self.opponent_model.predict(opp_obs, deterministic=False, action_masks=masks)
         # self.set_actions(opp_action, False)
         # self.is_curr_ally = True
 
