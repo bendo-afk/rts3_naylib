@@ -92,7 +92,7 @@ proc update*(self: var World, delta: float32) =
   let areTilesChanged = self.heightSystem.areChanged
   for t, itc in areTilesChanged:
     if itc.isChanged:
-      self.scoreSystem.onTileChanged(itc.tile, t, getTime())
+      self.scoreSystem.onTileChanged(itc.tile, t, self.leftMatchTime)
   
   self.leftMatchTime -= delta
   if self.leftMatchTime <= 0:

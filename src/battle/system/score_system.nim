@@ -53,14 +53,12 @@ proc onTileChanged*(self: var ScoreSystem, tile: Vector2i, team: Team, currentFr
 
 proc updateSide(self: var ScoreSystem, delta: float32) =
   for team in Team:
-    var
-      tiles = self.effTiles[team]
-      score = self.scores[team]
+    template tiles: untyped = self.effTiles[team]
     for t in tiles.mitems:
       t.leftTime -= delta
 
       if t.leftTime <= 0:
-        score += self.calcScore(t, tiles)
+        self.scores[team] += self.calcScore(t, tiles)
         t.leftTime = self.scoreInterval
         dec t.leftCount
 
