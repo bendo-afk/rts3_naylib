@@ -43,6 +43,7 @@ proc initEnv(aParamsArg, eParamsArg: seq[MinimalParams], renderMode: bool) {.exp
   matchRule.heightCd = 4
   matchRule.scoreInterval = 5
   matchRule.scoreKaisuu = 3
+  matchRule.scoreBase = 5
   aParams = aParamsArg
   eParams = eParamsArg
 
@@ -96,6 +97,10 @@ proc setAction(unitId: int, moveOrHeight: int, rotateAction: int) {.exportpy.} =
     targetAngle = u.attack.turretAngle
   let relPos = Vector2(x: cos(targetAngle), y: sin(targetAngle))
   u.attack.targetPos = relPos + u.move.pos
+
+
+proc isDead(unitId: int): bool {.exportpy.} =
+  return worldEnv.units[unitId].isDead
 
 
 proc isMovable(unitId: int, moveAction: int): bool {.exportpy.} =

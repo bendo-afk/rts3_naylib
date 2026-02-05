@@ -32,4 +32,6 @@ model = MaskablePPO(
     verbose=1,
 )
 
-model.learn(total_timesteps=100_000)
+model.learn(total_timesteps=50_000)
+
+model.save("models/phase0-v0")
