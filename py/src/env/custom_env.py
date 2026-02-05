@@ -25,6 +25,7 @@ class MyEnv(gym.Env):
         aParams = [aParam]
         myenv.initEnv(aParams, [], render_mode == "human")
 
+        self.initialized = False
 
 
     def get_observation(self, unit_id, is_ally):
@@ -59,6 +60,7 @@ class MyEnv(gym.Env):
         super().reset(seed=seed)
 
         myenv.reset()
+        self.initialized = True
 
         observation = self.get_observation(0, True)
         info = {}
@@ -66,9 +68,6 @@ class MyEnv(gym.Env):
   
 
     def step(self, action):
-        if self.render_mode == "human":
-            myenv.draw()
-
         myenv.setAction(0, action[0], action[1])
         myenv.step()
 
@@ -78,12 +77,15 @@ class MyEnv(gym.Env):
         reward = myenv.getReward(0)
         info = {}
 
+        if self.render_mode == "human" and self.initialized:
+            myenv.draw()
+
         return observation, reward, terminated, truncated, info
   
 
-    def render(self):
-        if self.render_mode == "human":
-            myenv.draw()
+    # def render(self):
+    #     if self.render_mode == "human":
+    #         myenv.draw()
 
     def action_masks(self):
         mask0 = np.array(myenv.getActionMask(0), dtype=bool)
@@ -97,7 +99,7 @@ def get_padded_obs(self_id, ally_ids, enemy_ids):
     allies_obs = []
     for a_id in ally_ids:
         if a_id != self_id:
-            allies_obs.append(env.getObsAlly(self_id, a_id))
+            allies_obs.append(myenv.getObsAlly(self_id, a_id))
     
     while len(allies_obs) < (7 - 1):
         pad = np.zeros(15, dtype=np.float32)
@@ -106,7 +108,7 @@ def get_padded_obs(self_id, ally_ids, enemy_ids):
 
     enemies_obs = []
     for e_id in enemy_ids:
-        enemies_obs.append(env.getObsEnemy(self_id, e_id))
+        enemies_obs.append(myenv.getObsEnemy(self_id, e_id))
     
     while len(enemies_obs) < 7:
         pad = np.zeros(15, dtype=np.float32)
@@ -124,13 +126,13 @@ gym.register(
 )
 
 
-env = gym.make("gymnasium_env/rts3-v0", render_mode="human")
+# env = gym.make("gymnasium_env/rts3-v0", render_mode="human")
 
-from gymnasium.utils.env_checker import check_env
+# from gymnasium.utils.env_checker import check_env
 
-# This will catch many common issues
-try:
-    check_env(env.unwrapped)
-    print("Environment passes all checks!")
-except Exception as e:
-    print(f"Environment has issues: {e}")
+# # This will catch many common issues
+# try:
+#     check_env(env.unwrapped)
+#     print("Environment passes all checks!")
+# except Exception as e:
+#     print(f"Environment has issues: {e}")

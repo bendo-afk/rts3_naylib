@@ -3,7 +3,7 @@ import ../unit/unit
 
 type
   # チームごとの進行状態をまとめる
-  ActionState = ref object
+  ActionState = object
     leftCd*: float32
     lockedUnitId*: UnitId = -1
     targetTile: Vector2i
@@ -35,7 +35,7 @@ proc tryStart*(self: var HeightSystem, unit: var Unit, team: Team, tile: Vector2
   if not canStartAction(self, team): return
 
   unit.heightAction.isChanging = true
-  var state = self.states[team]
+  var state = addr self.states[team]
   state.lockedUnitId = unit.id
   state.targetTile = tile
   state.isRaise = isRaise  
@@ -44,8 +44,8 @@ proc tryStart*(self: var HeightSystem, unit: var Unit, team: Team, tile: Vector2
 proc update*(self: var HeightSystem, units:seq[Unit], delta: float32) =
   var changedTile = Vector2i(x: int.low, y: int.low)
   var isRaise = false
-  for i, state in self.states:
-    self.areChanged[i].isChanged = false
+  for team, state in self.states.mpairs:
+    self.areChanged[team].isChanged = false
 
     if state.leftCd > 0:
       state.leftCd = max(0, state.leftCd - delta)
@@ -78,5 +78,5 @@ proc update*(self: var HeightSystem, units:seq[Unit], delta: float32) =
           changedTile = state.targetTile
           isRaise = state.isRaise
                 
-        self.areChanged[i].isChanged = true
-        self.areChanged[i].tile = state.targetTile
+        self.areChanged[team].isChanged = true
+        self.areChanged[team].tile = state.targetTile

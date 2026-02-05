@@ -36,7 +36,7 @@ proc draw*(self: WorldUI, world: World, camera: Camera2D) =
 
   self.sideUI.draw(world.units, fontSize, padding)
 
-  self.topUI.draw(world.scoreSystem.scores[Team.Ally], world.scoreSystem.scores[Team.Enemy], world.heightSystem.states[Team.Ally].leftCd, world.heightSystem.states[Team.Ally].leftCd)
+  self.topUI.draw(world.scoreSystem.scores[Team.Ally], world.scoreSystem.scores[Team.Enemy], world.heightSystem.states[Team.Ally].leftCd, world.heightSystem.states[Team.Enemy].leftCd)
 
   let
     leftSeconds = world.leftMatchTime.int

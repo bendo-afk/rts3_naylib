@@ -48,12 +48,12 @@ proc initEnv(aParamsArg, eParamsArg: seq[MinimalParams], renderMode: bool) {.exp
 
   if renderMode:
     initWindow(width, height, "training")
-    camera = Camera2D(zoom: 1, target: Vector2(x: -100, y: -100), offset: Vector2(x: width / 2, y: height / 2))
-    worldUI = initWorldUI(worldEnv)
 
 
 proc reset() {.exportpy.} =
   worldEnv = newWorld(matchRule, Vsize, aParams, eParams)
+  camera = Camera2D(zoom: 1, target: Vector2(x: -100, y: -100), offset: Vector2(x: width / 2, y: height / 2))
+  worldUI = initWorldUI(worldEnv)
   oldScores = [0, 0]
   rewards = [0, 0]
 
@@ -277,14 +277,15 @@ proc getReward(unitId: int): float32 {.exportpy.} =
 
 
 proc draw() {.exportpy.} =
-  dragCamera(camera)
-  zoomCamera(camera)
+  if not windowShouldClose():
+    dragCamera(camera)
+    zoomCamera(camera)
 
-  beginDrawing()
-  clearBackground(Brown)
+    beginDrawing()
+    clearBackground(Brown)
 
-  worldUI.draw(worldEnv, camera)
+    worldUI.draw(worldEnv, camera)
 
-  drawFPS(1, 1)
+    drawFPS(1, 1)
 
-  endDrawing()
+    endDrawing()
