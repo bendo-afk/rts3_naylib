@@ -32,4 +32,4 @@ model = MaskablePPO(
     verbose=1,
 )
 
-model.learn(total_timesteps=1_000_000)
+model.learn(total_timesteps=100_000)

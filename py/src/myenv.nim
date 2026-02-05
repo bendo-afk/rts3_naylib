@@ -99,6 +99,8 @@ proc setAction(unitId: int, moveOrHeight: int, rotateAction: int) {.exportpy.} =
 
 
 proc isMovable(unitId: int, moveAction: int): bool {.exportpy.} =
+  if worldEnv.units[unitId].move.movingWeight != 0:
+    return false
   let
     curTile = worldEnv.map.pos2tile(worldEnv.units[unitId].move.pos)
     nextTile = getAdjacentTile(curTile, moveAction)
@@ -106,6 +108,8 @@ proc isMovable(unitId: int, moveAction: int): bool {.exportpy.} =
 
 
 proc isChangeable(unitId, hAct: int): bool {.exportpy.} =
+  if worldEnv.units[unitId].move.movingWeight != 0:
+    return false
   let team = worldEnv.units[unitId].team
   if not worldEnv.heightSystem.canStartAction(team):
     return false
