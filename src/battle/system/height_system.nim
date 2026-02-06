@@ -31,14 +31,15 @@ proc canStartAction*(self: HeightSystem, team: Team): bool =
   return state.leftCd <= 0 and state.lockedUnitId == -1
 
 
-proc tryStart*(self: var HeightSystem, unit: var Unit, team: Team, tile: Vector2i, isRaise: bool) =
+proc tryStart*(self: var HeightSystem, unit: var Unit, tile: Vector2i, isRaise: bool) =
+  let team = unit.team
   if not canStartAction(self, team): return
 
   unit.heightAction.isChanging = true
   var state = addr self.states[team]
   state.lockedUnitId = unit.id
   state.targetTile = tile
-  state.isRaise = isRaise  
+  state.isRaise = isRaise
 
 
 proc update*(self: var HeightSystem, units:seq[Unit], delta: float32) =
@@ -49,8 +50,8 @@ proc update*(self: var HeightSystem, units:seq[Unit], delta: float32) =
 
     if state.leftCd > 0:
       state.leftCd = max(0, state.leftCd - delta)
-    
-    if not state.lockedUnitId == -1:
+
+    if state.lockedUnitId != -1:
       var u = addr units[state.lockedUnitId]
 
       if u[].isDead():
@@ -65,7 +66,6 @@ proc update*(self: var HeightSystem, units:seq[Unit], delta: float32) =
           u.heightAction.reset()
           state.lockedUnitId = -1
           continue
-        # 同時に同じタイルを同方向に変えたとき、あとのチームがタイルをかえれず、スコアを得られない。
     
       u.heightAction.update(delta)
 

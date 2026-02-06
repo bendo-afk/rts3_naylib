@@ -5,6 +5,10 @@ import ../control
 import rules/match_rule
 import ui/world_ui
 
+# import system/height_system
+# import ../utils
+
+
 var vsize = 100
 
 type Battle* = object
@@ -17,12 +21,12 @@ proc newBattle*(width, height: float32): Battle =
   let camera = Camera2D(zoom: 1, target: Vector2(x: -100, y: -100), offset: Vector2(x: width / 2, y: height / 2))
   result.camera = camera
   
-  var param = (1, 1.float32, 10, 1, 0.float32)
+  var param = (0, 1.float32, 10, 2, 0.float32)
   var aParams = @[param, param]
   var eParams: seq[MinimalParams] = @[param]
   result.world = newWorld(MatchRule(), vsize.float32, aParams, eParams)
   
-  result.worldUI = initWorldUI(result.world)
+  result.worldUI = initWorldUI(result.world, uiPlayer)
   
   # for u in result.world.units:
   #   echo u.id
@@ -58,11 +62,15 @@ proc handleInputs(battle: var Battle) =
   
   if isKeyPressed(R):
     battle.world.changeHeight(getMousePosition().getScreenToWorld2D(battle.camera), true)
+  
+  # if isKeyPressed(T):
+  #   battle.world.heightSystem.tryStart(battle.world.units[2], Vector2i(x: 19, y: 19), true)
 
 
 
 proc update*(battle: var Battle) =
-  let delta = getFrameTime()
+  # let delta = getFrameTime()
+  let delta = 1 / 60
   battle.world.update(delta)
   
   handleInputs(battle)

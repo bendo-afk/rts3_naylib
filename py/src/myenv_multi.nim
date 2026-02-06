@@ -45,6 +45,7 @@ proc initEnv(aParamsArg, eParamsArg: seq[MinimalParams], renderMode: bool) {.exp
   matchRule.scoreInterval = 5
   matchRule.scoreKaisuu = 3
   matchRule.scoreBase = 5
+  matchRule.matchTime = 60
   aParams = aParamsArg
   eParams = eParamsArg
 

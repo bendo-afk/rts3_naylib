@@ -98,7 +98,7 @@ proc nextHexas*(map: TileMap, last1, last2, cur1, cur2: Vector2i, next1, next2: 
             next2 = tile
 
 
-proc isVisible*(visionSystem: VisionSystem, from_pos, to_pos: Vector2, unit_height1, unit_height2: float): VisibleState =
+proc isVisible*(visionSystem: VisionSystem, from_pos, to_pos: Vector2, unit_height1, unit_height2: float32): VisibleState =
   template map: TileMap = visionSystem.map
   let
     from_tile = map.pos2tile(from_pos)

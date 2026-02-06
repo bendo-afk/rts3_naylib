@@ -4,7 +4,7 @@ import raylib, raymath
 import rules/match_rule as mr
 import map/tilemap
 import unit/unit
-import system/[attack_system, height_system, move_system, vision_system, score_system]
+import system/[attack_system, height_system, move_system, vision_system2, score_system]
 import ../utils
 import ../control
 
@@ -152,4 +152,4 @@ proc changeHeight*(self: var World, pos: Vector2, isRaise: bool) =
     if a.team != Ally: continue
     if not a.isSelected or a.move.movingWeight != 0:
       continue
-    self.heightSystem.tryStart(a, a.team, tile, isRaise)
+    self.heightSystem.tryStart(a, tile, isRaise)

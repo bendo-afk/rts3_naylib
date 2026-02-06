@@ -5,7 +5,12 @@ import ../world
 import ../unit/unit
 
 type
+  UIMode* = enum
+    uiPlayer, uiObs
+
+type
   WorldUI* = object
+    uiMode: UIMode
     uiSettings: UISettings
     sideUI: SideUI
     topUI: TopUI
@@ -13,12 +18,13 @@ type
 
 
 
-proc initWorldUI*(world: World): WorldUI =
+proc initWorldUI*(world: World, uiMode: UIMode): WorldUI =
   result.uiSettings = UISettings()
   let s = result.uiSettings
   result.sideUI = initSideUI(s, world.units)
   result.topUI = initTopUI(s)
   result.inUI = initInUI(s, world.units)
+  result.uiMode = uiMode
 
 
 proc update*(worldUI: var WorldUI, world: World, delta: float32) =
@@ -31,8 +37,12 @@ proc draw*(self: WorldUI, world: World, camera: Camera2D) =
   let fontSize = self.uiSettings.sideFontSize.int32
   let padding = 15.float32
 
+  case self.uiMode:
+    of uiPlayer:
+      self.inUI.drawPlayer(world, camera)
+    of uiObs:
+      self.inUI.drawObs(world, camera)
 
-  self.inUI.draw(world, camera)
 
   self.sideUI.draw(world.units, fontSize, padding)
 

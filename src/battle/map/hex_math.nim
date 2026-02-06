@@ -84,7 +84,7 @@ proc axial_dist(a, b: Vector2i): int =
   (abs(a.x - b.x) + abs(a.x + a.y - b.x - b.y) + abs(a.y - b.y)) div 2
 
 
-proc calc_dist*(a, b: Vector2i): int  =
+proc calcDist*(a, b: Vector2i): int  =
   let
     ac = oddr2axial(a)
     bc = oddr2axial(b)

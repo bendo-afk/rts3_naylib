@@ -79,7 +79,7 @@ proc toKey(pos: Vector2): Vector2 =
   return Vector2(x: pos.x.round, y: pos.y.round)
 
 
-proc draw*(self: InUI, world: World, camera: Camera2D) =
+proc drawPlayer*(self: InUI, world: World, camera: Camera2D) =
   mode2D(camera):
     world.map.draw_map()
     world.dragBox.drawDragBox(camera, self.boxColor, self.lineColor)
@@ -102,3 +102,35 @@ proc draw*(self: InUI, world: World, camera: Camera2D) =
       screenPos.y -= stackOffset * (ids.len - count).float32 # + 20
       self.unitsInUI[id].draw(screenPos, self.fontSize, self.maxNameWidth)
 
+
+proc drawUnitsObs(units: seq[Unit], unitSize: float32) =
+  for u in units:
+    if u.isDead: continue
+    let isEnemy = u.team == Team.Enemy
+    
+    let color = if isEnemy: Red else: Blue
+    drawCircle(u.move.pos, unitSize, color)
+    let lineEnd = u.move.pos + Vector2(x: 1000 * cos(u.attack.turretAngle), y: 1000 * sin(u.attack.turretAngle))
+    drawLine(u.move.pos, lineEnd, 2, RayWhite)
+
+
+proc drawObs*(self: InUI, world: World, camera: Camera2D) =
+  mode2D(camera):
+    world.map.draw_map()
+    world.dragBox.drawDragBox(camera, self.boxColor, self.lineColor)
+    drawUnitsObs(world.units, self.unitSize)
+
+  var groups: Table[Vector2, seq[int]]
+
+  for u in world.units:
+    if u. isDead: continue
+
+    let key = u.move.pos.toKey()
+    groups.mgetOrPut(key, @[]).add(u.id)
+
+  let stackOffset = self.fontSize.float32
+  for key, ids in groups:
+    for count, id in ids:
+      var screenPos = key.getWorldToScreen2D(camera)
+      screenPos.y -= stackOffset * (ids.len - count).float32 # + 20
+      self.unitsInUI[id].draw(screenPos, self.fontSize, self.maxNameWidth)

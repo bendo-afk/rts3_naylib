@@ -21,7 +21,11 @@ proc `==`*(a, b: Vector2i): bool =
 
 
 proc turn*(v0, v1, v2: Vector2): int =
-  crossProduct(v1 - v0, v2 - v0).sgn()
+  let cp = crossProduct(v1 - v0, v2 - v0)
+  if cp > 0.5: return 1
+  if cp < -0.5: return -1
+  else: 0
+
 
 
 proc angle*(v: Vector2): float =

@@ -20,15 +20,15 @@ class MyEnv(gym.Env):
         self.action_space = gym.spaces.MultiDiscrete([21, 3] * 7)
 
         aParam = (2, 2, 10, 1, 0)
-        aParams = [aParam]
-        myenv.initEnv(aParams, [aParam], render_mode == "human")
+        aParams = [aParam, aParam]
+        myenv.initEnv(aParams, aParams, render_mode == "human")
 
         self.initialized = False
-        self.opponent_model = None
+        self.opponent_model = MaskablePPO.load("models\phase1_20260206_131257.zip")
         self.model_pool_path = Path("models/")
         self.is_curr_ally = True
-        self.n_ally = 1
-        self.n_enemy = 1
+        self.n_ally = 2
+        self.n_enemy = 2
 
     
     def get_observation(self, is_ally):
@@ -67,7 +67,7 @@ class MyEnv(gym.Env):
     def reset(self, seed: Optional[int] = None, options: Optional[dict] = None):
         super().reset(seed=seed)
 
-        self.set_random_model()
+        # self.set_random_model()
 
         myenv.reset()
         self.initialized = True

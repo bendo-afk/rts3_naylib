@@ -33,22 +33,22 @@ proc draw*(self: TopUI, aScore, eScore: float, aCd, eCd: float) =
     eScoreWidth = measureText(eScoreStr, self.scoreSize.int32)
 
   drawText(font, aScoreStr, 
-    Vector2(x: midX - self.scoreSize * 2 + self.padding.float, y: topY), 
+    Vector2(x: midX - self.scoreSize * 3 + self.padding.float, y: topY), 
     Vector2(x: 0, y: 0),
     0, self.scoreSize.float, self.scoreSpacing, RayWhite)
 
   drawText(font, aCdStr, 
-    Vector2(x: midX - self.scoreSize * 2 - self.padding.float, y: topY), 
+    Vector2(x: midX - self.scoreSize * 3 - self.padding.float, y: topY), 
     Vector2(x: aCdWidth.float32, y: 0),
     0, self.heightCdSize.float, self.cdSpacing, RayWhite)
 
   drawText(font, eScoreStr, 
-    Vector2(x: midX + self.scoreSize * 2 - self.padding.float, y: topY), 
+    Vector2(x: midX + self.scoreSize * 3 - self.padding.float, y: topY), 
     Vector2(x: eScoreWidth.float, y: 0),
     0, self.scoreSize.float, self.scoreSpacing, RayWhite)
 
   drawText(font, eCdStr, 
-    Vector2(x: midX + self.scoreSize * 2 + self.padding.float, y: topY), 
+    Vector2(x: midX + self.scoreSize * 3 + self.padding.float, y: topY), 
     Vector2(x: 0, y: 0),
     0, self.heightCdSize.float, self.cdSpacing, RayWhite)
   
