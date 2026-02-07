@@ -58,6 +58,7 @@ proc newWorld*(matchRule: MatchRule, mapVsize: float32, aParams, eParams: seq[Mi
     var u = newUnit(matchRule, p, aPos)
     u.team = Team.Ally
     u.id = result.units.len
+    u.vision.lastPosition = aPos
     result.units.add(u)
 
   let ePos = result.map.tile2pos(Vector2i(x: matchRule.maxX, y: matchRule.maxY))
@@ -65,6 +66,7 @@ proc newWorld*(matchRule: MatchRule, mapVsize: float32, aParams, eParams: seq[Mi
     var u = newUnit(matchRule, p, ePos)
     u.team = Team.Enemy
     u.id = result.units.len
+    u.vision.lastPosition = ePos
     result.units.add(u)
 
   result.attackSystem = newAttackSystem()

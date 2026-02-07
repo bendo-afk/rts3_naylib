@@ -268,7 +268,13 @@ proc isTerminated(): bool {.exportpy.} =
 proc getReward(isAlly: bool): float32 {.exportpy.} =
   let team = if isAlly: Team.Ally else: Team.Enemy
   let oppTeam = if isAlly: Team.Enemy else: Team.Ally
-  return rewards[team] - rewards[oppTeam]
+  var winReward: float32 = 0
+  if isTerminated():
+    if worldEnv.scoreSystem.scores[Team.Ally] > worldEnv.scoreSystem.scores[Team.Enemy]:
+      winReward = 1
+    else:
+      winReward = -1
+  return rewards[team] - rewards[oppTeam] + winReward
 
 
 proc draw() {.exportpy.} =

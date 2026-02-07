@@ -24,7 +24,7 @@ class MyEnv(gym.Env):
         myenv.initEnv(aParams, aParams, render_mode == "human")
 
         self.initialized = False
-        self.opponent_model = MaskablePPO.load("models\phase1_20260206_131257.zip")
+        self.opponent_model = None
         self.model_pool_path = Path("models/")
         self.is_curr_ally = True
         self.n_ally = 2
@@ -67,7 +67,7 @@ class MyEnv(gym.Env):
     def reset(self, seed: Optional[int] = None, options: Optional[dict] = None):
         super().reset(seed=seed)
 
-        # self.set_random_model()
+        self.set_random_model()
 
         myenv.reset()
         self.initialized = True
