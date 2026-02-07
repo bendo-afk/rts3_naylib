@@ -68,19 +68,6 @@ when isMainModule:
   let
     # fromPos = Vector2(x: 500, y: 500)
     toPos = Vector2(x: 3377.499, y: 2850.0)
-  # for i in 0..5:
-  #   echo i, ":", turn(fromPos, toPos, map.getVertex(Vector2i(x: 5, y: 4), i))
-  # for i in 0..5:
-  #   echo i, " ", turn(fromPos, toPos, map.getVertex(Vector2i(x: 6, y: 4), i))
-  # for i in 0..5:
-  #   echo i, " ", turn(fromPos, toPos, map.getVertex(Vector2i(x: 5, y: 5), i))
-  
-  # var curTiles = [map.pos2tile(fromPos), InvalidTile]
-  # while true:
-  #   echo curTiles
-  #   if curTiles[0] == map.pos2tile(toPos):
-  #     break
-  #   curTiles = nextHexas(map, curTiles[0], fromPos, toPos)
   for y in 0..19:
     for x in 0..19:
       let tile = Vector2i(x: x, y: y)

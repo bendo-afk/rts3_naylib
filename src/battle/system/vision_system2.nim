@@ -7,28 +7,20 @@ const InvalidTile = Vector2i(x: int.low, y: int.low)
 
 
 type VisionSystem* = object
-  map: TileMap
   lMargin, sMargin: float32
 
 
-proc newVisionSystem*(map: TileMap, lMargin, sMargin: float32): VisionSystem =
-  VisionSystem(map: map, lMargin: lMargin, sMargin: sMargin)
+proc newVisionSystem*(lMargin, sMargin: float32): VisionSystem =
+  VisionSystem(lMargin: lMargin, sMargin: sMargin)
 
 
-proc nextHexas*(map: TileMap, cur: Vector2i, pos1, pos2: Vector2): array[2, Vector2i] =
-  let toTile = map.pos2tile(pos2)
+proc nextHexas*(map: TileMap, cur: Vector2i, pos1, pos2: Vector2, toTile: Vector2i): array[2, Vector2i] =
   let curDist = calcDist(cur, toTile)
-  # turnsで候補を出す
-  # 最大4つでてくるが、そのうち目的地までの距離が短い順にcur1 cur2に入れる。
-  # ただし、現在のタイルより長くなる場合ははじく。
-  # cur1に対して1を実行する。cur1==目的地となれば終了
   var cands = [InvalidTile, InvalidTile, InvalidTile, InvalidTile]
   var turns: array[6, int]
   turns[0] = turn(pos1, pos2, map.getVertex(cur, 0))
   for i in 0..5:
     turns[(i + 1) mod 6] = turn(pos1, pos2, map.getVertex(cur, (i + 1) mod 6))
-    # if cur == Vector2i(x: 6, y: 4):
-    #   echo turns
     if turns[i] == 0 and turns[(i + 1) mod 6] == 0:
       cands[0] = getAdjacentTile(cur, i)
       cands[1] = getAdjacentTile(cur, (i + 1) mod 6)
@@ -65,20 +57,15 @@ proc nextHexas*(map: TileMap, cur: Vector2i, pos1, pos2: Vector2): array[2, Vect
     elif d < best1:
       best1 = d
       idx1 = i
-  
-  # if cur == Vector2i(x: 6, y: 4):
-  #   echo cands
 
   result[0] = if idx0 != -1: cands[idx0] else: InvalidTile
   if best1 <= curDist and idx1 != -1:
     result[1] = cands[idx1]
   else:
     result[1] = InvalidTile
-  # if pos1 == map.tile2pos(Vector2i(x: 1, y: 7)):
-  #   echo result
 
-proc isVisible*(visionSystem: VisionSystem, fromPos, toPos: Vector2, unit_height1, unit_height2: float32): VisibleState =
-  template map: TileMap = visionSystem.map
+
+proc isVisible*(visionSystem: VisionSystem, fromPos, toPos: Vector2, unit_height1, unit_height2: float32, map: TileMap): VisibleState =
   let
     fromTile = map.pos2tile(fromPos)
     toTile = map.pos2tile(toPos)
@@ -91,15 +78,14 @@ proc isVisible*(visionSystem: VisionSystem, fromPos, toPos: Vector2, unit_height
     slope: float32 = (height2 - height1) / calc_dist(fromTile, toTile).float32
   
   var min_margin: float32 = system.Inf
-  var tiles: seq[array[2,Vector2i]]
   var curTiles = [fromTile, InvalidTile]
   while true:
-    tiles.add(curTiles)
+    curTiles = nextHexas(map, curTiles[0], fromPos, toPos, toTile)
     if curTiles[0] == toTile:
       break
 
     for t in curTiles:
-      if t == InvalidTile: break
+      if t == InvalidTile: continue
       let
         t_height = map.getHeight(t)
         t_dist = calc_dist(fromTile, t)
@@ -109,13 +95,6 @@ proc isVisible*(visionSystem: VisionSystem, fromPos, toPos: Vector2, unit_height
           return visNot
         min_margin = t_margin
     
-    let lasts = curTiles
-    curTiles = nextHexas(map, lasts[0], fromPos, toPos)
-    # if fromTile == Vector2i(x: 5, y: 4):
-      # echo curTiles
-    if curTiles[0] == InvalidTile:
-      echo fromPos, toPos
-      curTiles = nextHexas(map, lasts[1], fromPos, toPos)
 
   if min_margin + visionSystem.sMargin < 0:
     return visHalf
@@ -129,7 +108,7 @@ proc resetVision(units: var seq[Unit]) =
     u.visibleEnemyIds.setLen(0)
 
 
-proc update*(self: var VisionSystem, units: var seq[Unit]) =
+proc update*(self: var VisionSystem, units: var seq[Unit], map: TileMap) =
   units.resetVision()
   
   for i in 0 ..< units.len:
@@ -142,7 +121,7 @@ proc update*(self: var VisionSystem, units: var seq[Unit]) =
 
       if a.team == b.team: continue
       
-      let visState = self.isVisible(a.move.pos, b.move.pos, a.vision.height, b.vision.height)
+      let visState = self.isVisible(a.move.pos, b.move.pos, a.vision.height, b.vision.height, map)
       
       a.vision.visibleState = max(a.vision.visibleState, visState)
       b.vision.visibleState = max(b.vision.visibleState, visState)

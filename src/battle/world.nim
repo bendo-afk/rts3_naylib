@@ -69,7 +69,7 @@ proc newWorld*(matchRule: MatchRule, mapVsize: float32, aParams, eParams: seq[Mi
 
   result.attackSystem = newAttackSystem()
   result.moveSystem = newMoveSystem(matchRule.diff2speed, result.map)
-  result.visionSystem = newVisionSystem(result.map, matchRule.lMargin, matchRule.sMargin)
+  result.visionSystem = newVisionSystem(matchRule.lMargin, matchRule.sMargin)
   result.heightSystem = newHeightSystem(result.map, matchRule.heightCd)
   result.scoreSystem = newScoreSystem(matchRule.scoreInterval, matchRule.scoreKaisuu, matchRule.scoreBase, matchRule.dist2penalty)
   result.dragBox = newDragBox()
@@ -81,7 +81,7 @@ proc update*(self: var World, delta: float32) =
   self.attackSystem.update(self.units, delta)
   self.heightSystem.update(self.units, delta)
   self.moveSystem.update(self.units, delta)
-  self.visionSystem.update(self.units)
+  self.visionSystem.update(self.units, self.map)
   self.scoreSystem.update(delta)
 
   for u in self.units.mitems:
