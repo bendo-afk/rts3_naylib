@@ -38,10 +38,11 @@ def get_latest_model(model_dir: str = "models/"):
 
 from datetime import datetime
 
-training_iterations = 5
+training_iterations = 100
 for i in range(training_iterations):
   model = get_latest_model()
   model.set_env(env)
+  print(model.policy)
   model.learn(total_timesteps=70_000)
 
   timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")

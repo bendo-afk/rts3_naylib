@@ -79,7 +79,9 @@ proc isVisible*(visionSystem: VisionSystem, fromPos, toPos: Vector2, unit_height
   
   var min_margin: float32 = system.Inf
   var curTiles = [fromTile, InvalidTile]
-  while true:
+  for i in 0..1000:
+    if i == 500:
+      return visNot
     curTiles = nextHexas(map, curTiles[0], fromPos, toPos, toTile)
     if curTiles[0] == toTile:
       break
