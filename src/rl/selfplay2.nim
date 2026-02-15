@@ -1,4 +1,4 @@
-import os, algorithm, std/monotimes, sequtils, random
+import os, algorithm, times, sequtils, random, tables, strutils
 import arraymancer
 import notsac
 import myenv
@@ -8,6 +8,8 @@ const ConvCh = 9
 const ConvW = 20
 const ConvH = 20
 const ActionSize = 21 * 3
+
+randomize()
 
 network MyQNet:
   layers:
@@ -25,8 +27,9 @@ network MyQNet:
     return combined.fc2.relu.fc3
 
 
-proc save*(network: MyQNet, path: string) =
+proc save*(network: MyQNet[float32], logAlpha: float32, path: string) =
   createDir(path)
+  writeFile(path / "log_alpha.txt", $logAlpha)
   network.cv1.weight.value.write_npy(joinPath(path, "cv1w.npy"))
   network.cv1.bias.value.write_npy(joinPath(path, "cv1b.npy"))
   network.fcMap.weight.value.write_npy(joinPath(path, "fcmw.npy"))
@@ -37,20 +40,22 @@ proc save*(network: MyQNet, path: string) =
   network.fc2.bias.value.write_npy(joinPath(path, "fc2b.npy"))
   network.fc3.weight.value.write_npy(joinPath(path, "fc3w.npy"))
   network.fc3.bias.value.write_npy(joinPath(path, "fc3b.npy"))
-  
 
 
-proc load*(ctx: Context[Tensor[float32]], path: string): MyQNet[float32] =
-  result.cv1.weight = ctx.variable(read_npy[float32](joinPath(path, "cv1w.npy")), requires_grad = true)
-  result.cv1.bias = ctx.variable(read_npy[float32](joinPath(path, "cv1b.npy")), requires_grad = true)
-  result.fcMap.weight = ctx.variable(read_npy[float32](joinPath(path, "fcmw.npy")), requires_grad = true)
-  result.fcMap.bias = ctx.variable(read_npy[float32](joinPath(path, "fcmb.npy")), requires_grad = true)
-  result.fcLin.weight = ctx.variable(read_npy[float32](joinPath(path, "fclw.npy")), requires_grad = true)
-  result.fcLin.bias = ctx.variable(read_npy[float32](joinPath(path, "fclb.npy")), requires_grad = true)
-  result.fc2.weight = ctx.variable(read_npy[float32](joinPath(path, "fc2w.npy")), requires_grad = true)
-  result.fc2.bias = ctx.variable(read_npy[float32](joinPath(path, "fc2b.npy")), requires_grad = true)
-  result.fc3.weight = ctx.variable(read_npy[float32](joinPath(path, "fc3w.npy")), requires_grad = true)
-  result.fc3.bias = ctx.variable(read_npy[float32](joinPath(path, "fc3b.npy")), requires_grad = true)
+proc load*(ctx: Context[Tensor[float32]], path: string): (MyQNet[float32], float32) =
+  result[1] = readFile(path / "log_alpha.txt").parseFloat.float32
+  result[0] = ctx.init(MyQNet)
+
+  result[0].cv1.weight = ctx.variable(read_npy[float32](joinPath(path, "cv1w.npy")), requires_grad = true)
+  result[0].cv1.bias = ctx.variable(read_npy[float32](joinPath(path, "cv1b.npy")), requires_grad = true)
+  result[0].fcMap.weight = ctx.variable(read_npy[float32](joinPath(path, "fcmw.npy")), requires_grad = true)
+  result[0].fcMap.bias = ctx.variable(read_npy[float32](joinPath(path, "fcmb.npy")), requires_grad = true)
+  result[0].fcLin.weight = ctx.variable(read_npy[float32](joinPath(path, "fclw.npy")), requires_grad = true)
+  result[0].fcLin.bias = ctx.variable(read_npy[float32](joinPath(path, "fclb.npy")), requires_grad = true)
+  result[0].fc2.weight = ctx.variable(read_npy[float32](joinPath(path, "fc2w.npy")), requires_grad = true)
+  result[0].fc2.bias = ctx.variable(read_npy[float32](joinPath(path, "fc2b.npy")), requires_grad = true)
+  result[0].fc3.weight = ctx.variable(read_npy[float32](joinPath(path, "fc3w.npy")), requires_grad = true)
+  result[0].fc3.bias = ctx.variable(read_npy[float32](joinPath(path, "fc3b.npy")), requires_grad = true)
 
 
 proc loadLatestModel*(agent: var NoTSACAgent, dir: string) =
@@ -64,7 +69,8 @@ proc loadLatestModel*(agent: var NoTSACAgent, dir: string) =
   let latest = sortedDirs[^1]
   echo "Loading latest: ", latest
 
-  agent.qnet = load(agent.ctx, latest[1])
+  (agent.qnet, agent.logAlpha.value[0]) = load(agent.ctx, latest[1])
+  agent.alpha = agent.logAlpha.value[0].exp
 
 
 proc loadRandomModel*(agent: var NoTSACAgent, dir: string) =
@@ -75,7 +81,6 @@ proc loadRandomModel*(agent: var NoTSACAgent, dir: string) =
 
   let choice = dirs[rand(dirs.len - 1)]
   echo "Loading random: ", choice
-  echo dirs
   agent.qnet = load(agent.ctx, choice[1])
 
 let
@@ -89,24 +94,38 @@ let
 
 proc train(nEpisodes, maxEpiLen, saveInterval: int, modelDir: string) =
   var aParam = (2, 2'f32, 10, 1, 0'f32)
-  var aParams = @[aParam]
+  var aParams = @[aParam, aParam]
   var eParams = aParams
   var env = initEnv(aParams, eParams, true)
 
   var trainAgent = initSACAgent[MyQNet[float32]](Gamma, Lr, Epsilon, Reg, BufferSize, BatchSize, ConvCh, ConvW, ConvH, linearStateSize, ActionSize)
+  loadLatestModel(trainAgent, modelDir)
   # var opponent = initSACAgent[MyQNet[float32]](Gamma, Lr, Epsilon, Reg, BufferSize, BatchSize, ConvCh, ConvW, ConvH, linearStateSize, ActionSize)
 
   for ep in 0..<nEpisodes:
     env.reset()
+    # loadRandomModel(opponent, modelDir)
     var
       (cState, lState) = env.getObs(0)
       mask = env.getMask(0)
       done = false
-    # loadLatestModel(opponent, modelDir)
+
     for i in 0..maxEpiLen:
-      let
-        # oppAction = opponent.getAction(state)
-        action = trainAgent.getAction(cState, lState, mask)
+      for a in 1..1:
+        let
+          (aCState, aLState) = env.getObs(a)
+          aMask = env.getMask(a)
+        let
+          aAction = trainAgent.getAction(aCState, aLState, aMask)
+        env.setAction(a, aAction)
+      for e in 2..3:
+        let
+          (eCState, eLState) = env.getObs(e)
+          eMask = env.getMask(e)
+          eAction = trainAgent.getAction(eCState, eLState, eMask)
+        env.setAction(e, eAction)
+
+      let action = trainAgent.getAction(cState, lState, mask)
       env.setAction(0, action)
       var
         nextCState, nextLState: Tensor[float32]
@@ -119,8 +138,8 @@ proc train(nEpisodes, maxEpiLen, saveInterval: int, modelDir: string) =
       (reward, done) = (env.getReward(0), env.isTerminated())
 
       trainAgent.replayBuffer.add(cState, lState, nextCState, nextLState, action, reward, done, mask)
-      if i mod 10 == 0:
-        trainAgent.update(cState, lState, nextCState, nextLState, action, reward, done, mask)
+      # if i mod 10 == 0:
+      trainAgent.update(cState, lState, nextCState, nextLState, action, reward, done, mask)
       (cState, lState, mask) = (nextCState, nextLState, env.getMask(0))
       if done:
         var totReward = 0'f32
@@ -130,12 +149,12 @@ proc train(nEpisodes, maxEpiLen, saveInterval: int, modelDir: string) =
           totReward = trainAgent.replayBuffer.rewards[idxInBuffer] + trainAgent.gamma * totReward
           trainAgent.replayBuffer.add(idxInBuffer, totReward)
         break
-    if ep mod 50 == 0:
-      let path = joinPath("models", $getMonoTime())
+    if ep mod saveInterval == 0:
+      let path = joinPath("models", format(now(), "yyyy-MM-dd-HH-mm"))
       createDir(path)
-      save(trainAgent.qnet, path)
+      save(trainAgent.qnet, trainAgent.logAlpha.value[0], path)
 
 
 const ModelDir = "models"
 
-train(50, 60 * 60 + 1, 50, ModelDir)
+train(10000, 60 * 60 + 1, 100, ModelDir)

@@ -324,6 +324,7 @@ proc getObs*(self: WorldEnv, unitId: int): tuple[map, lin: Tensor[float32]] =
 
 
 proc draw(self: var WorldEnv) =
+  self.worldUI.update(self.world, Delta)
   if not windowShouldClose():
     dragCamera(self.camera)
     zoomCamera(self.camera)
@@ -358,5 +359,14 @@ proc isTerminated*(self: WorldEnv): bool =
 
 
 proc getReward*(self: WorldEnv, unitId: int): float32 =
-  let team = self.world.units[unitId].team
-  return self.rewards[team]
+  let world = self.world
+  let isAlly = world.units[unitId].team == Team.Ally
+  let team = if isAlly: Team.Ally else: Team.Enemy
+  let oppTeam = if isAlly: Team.Enemy else: Team.Ally
+  var winReward: float32 = 0
+  if isTerminated(self):
+    if world.scoreSystem.scores[Team.Ally] > world.scoreSystem.scores[Team.Enemy]:
+      winReward = 1
+    else:
+      winReward = -1
+  return self.rewards[team] - self.rewards[oppTeam] + winReward

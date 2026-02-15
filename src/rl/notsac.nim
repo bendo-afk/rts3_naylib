@@ -76,8 +76,8 @@ type
 
     nAction: int
 
-    logAlpha: Variable[Tensor[float32]]
-    alpha: float32
+    logAlpha*: Variable[Tensor[float32]]
+    alpha*: float32
     alphaOptimizer: Adam[Tensor[float32]]
     targetEntropy: float32
 
@@ -118,7 +118,6 @@ proc getAction*(self: NoTSACAgent, cs, ls, mask: Tensor[float32]): int =
 
 
 proc update*(self: var NoTSACAgent, cState, lState, nextCState, nextLState: Tensor[float32], action: int, reward: float32, done: bool, mask: Tensor[float32]) =
-  self.replayBuffer.add(cState, lState, nextCState, nextLState, action, reward, done, mask)
   if self.replayBuffer.count < self.batchSize:
     return
   
